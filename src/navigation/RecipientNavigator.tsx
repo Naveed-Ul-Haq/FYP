@@ -1,7 +1,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-// Recipient Screens (EXISTING ONLY)
 import UserHomeScreen from '../screens/user/UserHomeScreen';
 import RecipientProfileForm from '../screens/user/RecipientProfileForm';
 
@@ -22,7 +21,7 @@ const RecipientNavigator: React.FC = () => {
         headerTitleStyle: { fontWeight: 'bold' },
       }}
     >
-      {/* Recipient Home */}
+ 
       <Stack.Screen
         name="UserHome"
         component={UserHomeScreen}
@@ -32,7 +31,7 @@ const RecipientNavigator: React.FC = () => {
         }}
       />
 
-      {/* Recipient Profile Form */}
+    
       <Stack.Screen
         name="RecipientProfileForm"
         component={RecipientProfileForm}
