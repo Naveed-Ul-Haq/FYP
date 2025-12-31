@@ -2,10 +2,8 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { authAPI } from '../services/api';
 
-/** User roles */
 type UserRole = 'admin' | 'donor' | 'user';
 
-/** User Interface */
 export interface User {
   id: string;
   name: string;
@@ -13,7 +11,6 @@ export interface User {
   role: UserRole;
 }
 
-/** Authentication Context Type */
 interface AuthContextType {
   user: User | null;
   userRole: UserRole | null;
