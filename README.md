@@ -17,10 +17,10 @@ This project is being developed incrementally. The current implementation focuse
 
 # 🏗️ System Architecture (Current)
 
-* *Frontend: React Native 
-* *Backend: Node.js with Express
-* *Database: SQLite (embedded)
-* *Architecture Style: Client–Server (Centralized)
+* Frontend: React Native 
+* Backend: Node.js with Express
+* Database: SQLite (embedded)
+* Architecture Style: Client–Server (Centralized)
 
 
 # ✅ Features Implemented (Initial Progress)
