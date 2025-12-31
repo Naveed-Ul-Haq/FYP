@@ -139,8 +139,10 @@ This project is developed as a **Final Year Project (FYP)** and currently repres
 
 ## 👤 Authors
 
-*Student Names:** *Naveed Ul Haq*, *Muhammad Sudais Khan * and *Syed Hasnain Ali Shah*
+*Student Names:* *Naveed Ul Haq*, *Muhammad Sudais Khan* and *Syed Hasnain Ali Shah*
+
 *Program:* BSSE
+
 *Institution:* *INSTITUTE OF MANAGEMENT SCIENCES*
 
 
