@@ -1,10 +1,3 @@
-/**
- * useAuth Hook
- * 
- * Typed custom hook for authentication operations.
- * Ensures useAuth is only used inside AuthProvider.
- */
-
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import type { AuthContextType } from '../context/AuthContext';
