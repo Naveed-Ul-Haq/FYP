@@ -7,7 +7,6 @@ import { AlertProvider } from './src/context/AlertContext';
 import { BloodRequestProvider } from './src/context/BloodRequestContext';
 export default function App() {
   return (
-    
     <AlertProvider>
       <AuthProvider>
         <BloodRequestProvider>
