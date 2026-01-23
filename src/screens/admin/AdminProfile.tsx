@@ -30,7 +30,7 @@ type NavigationProp = StackNavigationProp<
 
 const AdminProfile: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { user, logout, token } = useAuth();
+  const { user, logout } = useAuth();
   const { showAlert } = useAlert();
 
   const logoutTimer = useRef<NodeJS.Timeout | null>(null);
@@ -58,7 +58,6 @@ const AdminProfile: React.FC = () => {
 
   const authHeaders = {
     'Content-Type': 'application/json',
-    Authorization: `Bearer ${token}`,
   };
 
   const sendVerificationCode = async (email: string, purpose: string) => {

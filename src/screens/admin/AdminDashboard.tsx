@@ -13,7 +13,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
-import { useAlert } from '../../context/AlertContext';
 import { API_BASE_URL } from '../../services/api/apiClient';
 
 /* ✅ FIX 1: remove route constraint to avoid mismatch */
@@ -27,8 +26,7 @@ type ActivityItem = {
 
 export default function AdminDashboard() {
   const navigation = useNavigation<NavigationProp>();
-  const { user, logout, token } = useAuth();
-  const { showAlert } = useAlert();
+  const { user, logout } = useAuth();
 
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -48,15 +46,14 @@ export default function AdminDashboard() {
   /* ✅ FIX 3: safe auth headers */
   const authHeaders: HeadersInit = {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
 
   /* ================= LOAD UNREAD NOTIFICATIONS ================= */
 
   const loadUnreadCount = useCallback(async () => {
     if (!user?.id) return;
-    const count = await getUnreadNotificationCount(user.id);
-    setUnreadCount(count);
+    // Notifications will be fetched from API when implemented
+    setUnreadCount(0);
   }, [user?.id]);
 
   useFocusEffect(
@@ -137,20 +134,8 @@ export default function AdminDashboard() {
 
   /* ================= LOGOUT ================= */
 
-  const handleLogout = () => {
-    showAlert({
-      type: 'warning',
-      title: 'Logout',
-      message: 'Are you sure you want to logout?',
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => await logout(),
-        },
-      ],
-    });
+  const handleLogout = async () => {
+    await logout();
   };
 
   return (
@@ -179,6 +164,13 @@ export default function AdminDashboard() {
               </Text>
             </View>
           )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.headerIcon}
+          onPress={handleLogout}
+        >
+          <Ionicons name="log-out" size={24} color="#fff" />
         </TouchableOpacity>
       </View>
 

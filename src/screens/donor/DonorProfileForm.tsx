@@ -20,6 +20,19 @@ import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import { profileApi } from '../../services/api/profileApi';
 
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+});
+
 const DonorProfileForm: React.FC = () => {
   const navigation = useNavigation<any>();
   const { user } = useAuth();
@@ -54,8 +67,8 @@ const DonorProfileForm: React.FC = () => {
     if (!user) return;
     try {
       const res = await profileApi.getDonorProfile(user.id);
-      if (res.success && res.profile) {
-        const p = res.profile;
+      if (res.data?.success && res.data?.profile) {
+        const p = res.data.profile;
         setExistingProfile(p);
         setProfileImage(p.profile_image || '');
         setMobile(p.mobile || '');
@@ -106,7 +119,7 @@ const DonorProfileForm: React.FC = () => {
       };
 
       const res = await profileApi.updateDonorProfile(user.id, payload);
-      if (res.success) {
+      if (res.data?.success) {
         showAlert({
           type: 'success',
           title: 'Profile Submitted',

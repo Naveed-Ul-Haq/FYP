@@ -159,11 +159,21 @@ export default function RegisterScreen({ navigation }: Props) {
         return;
       }
 
-      // Send email via backend
-      const result = await EmailService.sendVerificationCode(email.trim(), 'registration');
+      // Send email via backend API
+      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/send-verification-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), purpose: 'registration' }),
+      });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send verification code');
+      if (!response.ok) {
+        throw new Error('Failed to send verification code');
+      }
+
+      const data = await response.json();
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send verification code');
       }
 
       setCodeSent(true);
@@ -203,10 +213,25 @@ export default function RegisterScreen({ navigation }: Props) {
       setIsVerifying(true);
       setErrors({ ...errors, verification: '' });
 
-      const result = await EmailService.verifyCode(email.trim(), verificationCode);
+      // Call backend to verify code
+      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          code: verificationCode,
+          purpose: 'registration'
+        }),
+      });
 
-      if (!result.success) {
-        throw new Error(result.error || 'Invalid verification code');
+      if (!response.ok) {
+        throw new Error('Failed to verify code');
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Invalid verification code');
       }
 
       setEmailVerified(true);

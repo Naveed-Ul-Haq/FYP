@@ -41,10 +41,10 @@ export default function UserHomeScreen() {
     try {
       const response = await profileApi.getRecipientProfile(user.id);
 
-      if (response?.success && response.profile) {
+      if (response?.data?.success && response.data.profile) {
         const rawStatus =
-          response.profile.approval_status ||
-          response.profile.approvalStatus;
+          response.data.profile.approval_status ||
+          response.data.profile.approvalStatus;
 
         switch (rawStatus) {
           case 'APPROVED':
@@ -61,8 +61,8 @@ export default function UserHomeScreen() {
         }
 
         setProfileRemarks(
-          response.profile.admin_remarks ||
-            response.profile.adminRemarks ||
+          response.data.profile.admin_remarks ||
+            response.data.profile.adminRemarks ||
             ''
         );
       } else {
@@ -140,11 +140,8 @@ export default function UserHomeScreen() {
       type: 'warning',
       title: 'Logout',
       message: 'Are you sure you want to logout?',
-      buttons: [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Logout', style: 'destructive', onPress: logout },
-      ],
     });
+    logout();
   };
 
   const createRequest = () => {

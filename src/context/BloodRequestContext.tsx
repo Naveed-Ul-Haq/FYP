@@ -1,4 +1,4 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, ReactNode, useContext } from 'react';
 
 export interface BloodRequest {
   id: string;
@@ -9,6 +9,7 @@ export interface BloodRequest {
   hospitalName: string;
   description: string;
   createdAt: Date;
+  userId?: string;
 }
 
 interface BloodRequestContextType {
@@ -18,6 +19,7 @@ interface BloodRequestContextType {
   updateRequest: (id: string, request: Partial<BloodRequest>) => void;
   getRequestsByBloodType: (bloodType: string) => BloodRequest[];
   getUrgentRequests: () => BloodRequest[];
+  getUserRequests: (userId: string) => BloodRequest[];
 }
 
 export const BloodRequestContext = createContext<BloodRequestContextType | undefined>(undefined);
@@ -52,6 +54,10 @@ export const BloodRequestProvider: React.FC<{ children: ReactNode }> = ({ childr
     return requests.filter((req) => req.urgency === 'critical' || req.urgency === 'high');
   };
 
+  const getUserRequests = (userId: string) => {
+    return requests.filter((req) => req.userId === userId);
+  };
+
   return (
     <BloodRequestContext.Provider
       value={{
@@ -61,9 +67,18 @@ export const BloodRequestProvider: React.FC<{ children: ReactNode }> = ({ childr
         updateRequest,
         getRequestsByBloodType,
         getUrgentRequests,
+        getUserRequests,
       }}
     >
       {children}
     </BloodRequestContext.Provider>
   );
+};
+
+export const useBloodRequest = (): BloodRequestContextType => {
+  const context = useContext(BloodRequestContext);
+  if (!context) {
+    throw new Error('useBloodRequest must be used within a BloodRequestProvider');
+  }
+  return context;
 };

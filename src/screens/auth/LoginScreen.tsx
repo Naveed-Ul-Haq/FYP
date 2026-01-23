@@ -59,7 +59,11 @@ export default function LoginScreen({ navigation }: Props) {
 
     try {
       // First, get user's role from backend by email
-      const { role } = await authApi.getUserRole(email.trim());
+      console.log('🔍 Getting user role for:', email.trim());
+      const roleResponse = await authApi.getUserRole(email.trim());
+      console.log('📨 Role response:', roleResponse);
+      const { role } = roleResponse.data;
+      console.log('✅ User role:', role);
 
       // Now login with the detected role
       await login(email.trim(), password, role);
@@ -70,6 +74,7 @@ export default function LoginScreen({ navigation }: Props) {
         message: 'Logged in successfully!',
       });
     } catch (error) {
+      console.error('❌ Login error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
       
       showAlert({

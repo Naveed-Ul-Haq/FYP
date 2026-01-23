@@ -16,12 +16,11 @@ import { apiClient } from './apiClient';
 export const authApi = {
   /**
    * Login user
-   * @param email - User email
-   * @param password - User password
+   * @param credentials - Email, password, and role
    * @returns User data and authentication token
    */
-  login: async (email: string, password: string) => {
-    return apiClient.post('/auth/login', { email, password });
+  login: async (credentials: { email: string; password: string; role: string }) => {
+    return apiClient.post('/login', credentials);
   },
 
   /**
@@ -36,14 +35,19 @@ export const authApi = {
     role: string;
     bloodType?: string;
   }) => {
-    return apiClient.post('/auth/register', userData);
+    // Generate a unique ID for the user
+    const id = `${userData.role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return apiClient.post('/register', { 
+      id,
+      ...userData 
+    });
   },
 
   /**
    * Logout user
    */
   logout: async () => {
-    return apiClient.post('/auth/logout', {});
+    return apiClient.post('/logout', {});
   },
 
   /**
@@ -51,7 +55,7 @@ export const authApi = {
    * @param email - User email
    */
   forgotPassword: async (email: string) => {
-    return apiClient.post('/auth/forgot-password', { email });
+    return apiClient.post('/forgot-password', { email });
   },
 
   /**
@@ -60,7 +64,7 @@ export const authApi = {
    * @param otp - One-time password
    */
   verifyOTP: async (email: string, otp: string) => {
-    return apiClient.post('/auth/verify-otp', { email, otp });
+    return apiClient.post('/verify-otp', { email, otp });
   },
 
   /**
@@ -68,7 +72,7 @@ export const authApi = {
    * @param email - User email
    */
   getUserRole: async (email: string) => {
-    return apiClient.get(`/auth/role/${email}`);
+    return apiClient.post('/get-user-role', { email });
   },
 
   /**
@@ -77,7 +81,7 @@ export const authApi = {
    * @param newPassword - New password
    */
   resetPassword: async (email: string, newPassword: string) => {
-    return apiClient.post('/auth/reset-password', { email, newPassword });
+    return apiClient.post('/reset-password', { email, newPassword });
   },
 };
 

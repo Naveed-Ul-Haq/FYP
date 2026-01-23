@@ -39,6 +39,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     restoreSession();
   }, []);
 
+  // Log whenever user changes
+  useEffect(() => {
+    console.log('🔄 User changed:', user);
+    console.log('👤 UserRole is now:', user?.role || null);
+  }, [user]);
+
   const restoreSession = async () => {
     try {
       const storedUserData = await AsyncStorage.getItem(USER_DATA_KEY);
@@ -67,6 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string,
     role: UserRole
   ) => {
+    console.log('📝 Registering user:', { name, email, role });
     const response = await authApi.register({
       name,
       email,
@@ -74,11 +81,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       role,
     });
 
-    if (!response.success) {
-      throw new Error('Registration failed');
+    console.log('📨 Register response:', response);
+    const data = response.data;
+    console.log('📨 Response data:', data);
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Registration failed');
     }
 
-    const userData: User = response.user;
+    const userData: User = data.user;
+    console.log('✅ Setting user after registration:', userData);
     setUser(userData);
     await saveUserToStorage(userData);
   };
@@ -88,13 +100,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string,
     role: UserRole
   ) => {
+    console.log('🔐 Attempting login with:', { email, role });
     const response = await authApi.login({ email, password, role });
 
-    if (!response.success) {
-      throw new Error('Invalid credentials');
+    console.log('📨 Login response:', response);
+    const data = response.data;
+    console.log('📨 Response data:', data);
+    
+    if (!data.success) {
+      throw new Error(data.error || 'Invalid credentials');
     }
 
-    const userData: User = response.user;
+    const userData: User = data.user;
+    console.log('✅ Setting user:', userData);
     setUser(userData);
     await saveUserToStorage(userData);
   };
@@ -106,7 +124,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPassword = async (email: string, newPassword: string) => {
     const response = await authApi.resetPassword(email, newPassword);
-    if (!response.success) {
+    const data = response.data;
+    if (!data.success) {
       throw new Error('Password reset failed');
     }
   };

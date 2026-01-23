@@ -113,11 +113,21 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
         return;
       }
       
-      // Send verification code via email for password reset
-      const result = await EmailService.sendVerificationCode(email.trim(), 'password-reset');
+      // Send verification code via backend API for password reset
+      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/send-verification-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), purpose: 'password-reset' }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to send verification code');
+      }
+
+      const data = await response.json();
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send verification code');
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to send verification code');
       }
       
       showAlert({
@@ -166,10 +176,24 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
       setIsVerifying(true);
       
       // Verify code with backend
-      const result = await EmailService.verifyCode(email.trim(), verificationCode);
+      const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/verify-code`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          code: verificationCode,
+          purpose: 'password-reset'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to verify code');
+      }
+
+      const data = await response.json();
       
-      if (!result.success) {
-        throw new Error(result.error || 'Invalid verification code');
+      if (!data.success) {
+        throw new Error(data.error || 'Invalid verification code');
       }
       
       showAlert({
