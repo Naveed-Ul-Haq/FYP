@@ -21,7 +21,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import { RootStackParamList } from '../../navigation/types';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL } from '../../services/api/apiClient';
 
 type NavigationProp = StackNavigationProp<
   RootStackParamList,

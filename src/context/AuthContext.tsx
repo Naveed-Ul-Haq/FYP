@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { authAPI } from '../services/api';
+import { authApi } from '../services/api/authApi';
 
 type UserRole = 'admin' | 'donor' | 'user';
 
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string,
     role: UserRole
   ) => {
-    const response = await authAPI.register({
+    const response = await authApi.register({
       name,
       email,
       password,
@@ -88,7 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     password: string,
     role: UserRole
   ) => {
-    const response = await authAPI.login({ email, password, role });
+    const response = await authApi.login({ email, password, role });
 
     if (!response.success) {
       throw new Error('Invalid credentials');
@@ -105,7 +105,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const resetPassword = async (email: string, newPassword: string) => {
-    const response = await authAPI.resetPassword(email, newPassword);
+    const response = await authApi.resetPassword(email, newPassword);
     if (!response.success) {
       throw new Error('Password reset failed');
     }

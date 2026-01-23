@@ -16,7 +16,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
-import { profileAPI } from '../../services/api';
+import { profileApi } from '../../services/api/profileApi';
 
 const RecipientProfileForm: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -42,7 +42,7 @@ const RecipientProfileForm: React.FC = () => {
   const loadProfile = async () => {
     if (!user) return;
     try {
-      const res = await profileAPI.getRecipientProfile(user.id);
+      const res = await profileApi.getRecipientProfile(user.id);
       if (res.success && res.profile) {
         const p = res.profile;
         setExistingProfile(p);
@@ -84,7 +84,7 @@ const RecipientProfileForm: React.FC = () => {
         zipcode,
       };
 
-      const res = await profileAPI.saveRecipientProfile(payload);
+      const res = await profileApi.updateRecipientProfile(user.id, payload);
       if (res.success) {
         showAlert({
           type: 'success',

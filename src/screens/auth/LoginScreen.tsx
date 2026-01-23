@@ -14,7 +14,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList, UserRole } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
-import { authAPI } from '../../services/api';
+import { authApi } from '../../services/api/authApi';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
@@ -59,7 +59,7 @@ export default function LoginScreen({ navigation }: Props) {
 
     try {
       // First, get user's role from backend by email
-      const { role } = await authAPI.getUserRole(email.trim());
+      const { role } = await authApi.getUserRole(email.trim());
 
       // Now login with the detected role
       await login(email.trim(), password, role);

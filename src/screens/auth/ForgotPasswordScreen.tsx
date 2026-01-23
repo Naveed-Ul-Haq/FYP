@@ -15,7 +15,7 @@ import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import * as EmailService from '../../services/emailService';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL } from '../../services/api/apiClient';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'ForgotPassword'>;
 

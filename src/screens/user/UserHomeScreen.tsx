@@ -12,7 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
 import { useBloodRequest } from '../../context/BloodRequestContext';
-import { profileAPI } from '../../services/api';
+import { profileApi } from '../../services/api/profileApi';
 
 /**
  * UserHomeScreen (Recipient Dashboard)
@@ -39,7 +39,7 @@ export default function UserHomeScreen() {
     if (!user) return;
 
     try {
-      const response = await profileAPI.getRecipientProfile(user.id);
+      const response = await profileApi.getRecipientProfile(user.id);
 
       if (response?.success && response.profile) {
         const rawStatus =

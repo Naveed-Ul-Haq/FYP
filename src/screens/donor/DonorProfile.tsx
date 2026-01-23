@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL } from '../../services/api/apiClient';
 
 export default function DonorProfile() {
   const navigation = useNavigation<any>();

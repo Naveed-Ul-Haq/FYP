@@ -62,5 +62,22 @@ export const authApi = {
   verifyOTP: async (email: string, otp: string) => {
     return apiClient.post('/auth/verify-otp', { email, otp });
   },
+
+  /**
+   * Get user role by email
+   * @param email - User email
+   */
+  getUserRole: async (email: string) => {
+    return apiClient.get(`/auth/role/${email}`);
+  },
+
+  /**
+   * Reset password
+   * @param email - User email
+   * @param newPassword - New password
+   */
+  resetPassword: async (email: string, newPassword: string) => {
+    return apiClient.post('/auth/reset-password', { email, newPassword });
+  },
 };
 

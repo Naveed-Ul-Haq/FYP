@@ -18,7 +18,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { useNavigation } from '@react-navigation/native';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
-import { profileAPI } from '../../services/api';
+import { profileApi } from '../../services/api/profileApi';
 
 const DonorProfileForm: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -53,7 +53,7 @@ const DonorProfileForm: React.FC = () => {
   const loadProfile = async () => {
     if (!user) return;
     try {
-      const res = await profileAPI.getDonorProfile(user.id);
+      const res = await profileApi.getDonorProfile(user.id);
       if (res.success && res.profile) {
         const p = res.profile;
         setExistingProfile(p);
@@ -105,7 +105,7 @@ const DonorProfileForm: React.FC = () => {
         disease,
       };
 
-      const res = await profileAPI.saveDonorProfile(payload);
+      const res = await profileApi.updateDonorProfile(user.id, payload);
       if (res.success) {
         showAlert({
           type: 'success',

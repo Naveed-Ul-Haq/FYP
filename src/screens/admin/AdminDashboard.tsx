@@ -14,7 +14,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL } from '../../services/api/apiClient';
 
 /* ✅ FIX 1: remove route constraint to avoid mismatch */
 type NavigationProp = StackNavigationProp<RootStackParamList>;

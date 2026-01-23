@@ -15,7 +15,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 
 import { useAlert } from '../../context/AlertContext';
 import { RootStackParamList } from '../../navigation/types';
-import { API_BASE_URL } from '../../services/api';
+import { API_BASE_URL } from '../../services/api/apiClient';
 
 /* ================= TYPES ================= */
 
