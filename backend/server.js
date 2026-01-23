@@ -4,6 +4,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -534,8 +535,8 @@ function initializeDatabase() {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'humantraits7@gmail.com',
-    pass: 'dicuacksxcgldcxp', // App password
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
   },
 });
 
