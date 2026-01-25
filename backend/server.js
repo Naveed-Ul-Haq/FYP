@@ -4,7 +4,6 @@ const cors = require('cors');
 const crypto = require('crypto');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -535,8 +534,8 @@ function initializeDatabase() {
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
+    user: 'naveedulhaq75@gmail.com',
+    pass: 'uhwdzvwuzcvayyuh', // App password
   },
 });
 
@@ -650,7 +649,7 @@ app.post('/api/send-verification-code', async (req, res) => {
 
     // Send email
     await transporter.sendMail({
-      from: '"Blood Donation Management System" <humantraits7@gmail.com>',
+      from: '"Blood Donation Management System" <naveedulhaq75@gmail.com>',
       to: email,
       subject: subject,
       html: htmlContent,
@@ -1377,6 +1376,51 @@ app.get('/api/users', (req, res) => {
   });
 });
 
+/**
+ * GET /api/donors-by-blood-type
+ * Get count of approved donors grouped by blood type
+ */
+app.get('/api/donors-by-blood-type', (req, res) => {
+  db.all(`
+    SELECT 
+      dp.blood_group,
+      COUNT(*) as count
+    FROM donor_profiles dp
+    INNER JOIN users u ON dp.user_id = u.id
+    WHERE dp.approval_status = 'APPROVED'
+      AND u.account_status = 'active'
+      AND u.role = 'donor'
+    GROUP BY dp.blood_group
+  `, [], (err, results) => {
+    if (err) {
+      console.error('❌ Error fetching donors by blood type:', err);
+      return res.status(500).json({ error: 'Database error' });
+    }
+
+    // Initialize all blood types with 0 count
+    const bloodTypeCounts = {
+      'A+': 0,
+      'A-': 0,
+      'B+': 0,
+      'B-': 0,
+      'O+': 0,
+      'O-': 0,
+      'AB+': 0,
+      'AB-': 0,
+    };
+
+    // Fill in actual counts
+    results.forEach(row => {
+      if (bloodTypeCounts.hasOwnProperty(row.blood_group)) {
+        bloodTypeCounts[row.blood_group] = row.count;
+      }
+    });
+
+    console.log('✅ Fetched donor counts by blood type:', bloodTypeCounts);
+    res.json({ bloodTypes: bloodTypeCounts });
+  });
+});
+
 // ============================================
 // BLOOD REQUEST ENDPOINTS
 // ============================================
@@ -1483,6 +1527,40 @@ app.post('/api/blood-requests', (req, res) => {
           location
         },
         ipAddress: req.ip || req.connection.remoteAddress
+      });
+
+      // Send notifications to all approved donors
+      db.all(`
+        SELECT DISTINCT u.id, u.name
+        FROM users u
+        JOIN donor_profiles dp ON u.id = dp.user_id
+        WHERE u.role = 'donor' 
+          AND u.account_status = 'active'
+          AND dp.approval_status = 'APPROVED'
+      `, [], (err, donors) => {
+        if (err) {
+          console.error('Error fetching donors for notifications:', err);
+        } else if (donors && donors.length > 0) {
+          console.log(`📢 Sending blood request notification to ${donors.length} donors`);
+          
+          donors.forEach(donor => {
+            createNotification(
+              donor.id,
+              'BLOOD_REQUEST_CREATED',
+              '🩸 New Blood Request',
+              `${bloodGroup} blood needed - ${urgencyLevel} urgency at ${location}`,
+              { 
+                requestId: id,
+                bloodGroup,
+                urgency: urgencyLevel,
+                location,
+                units
+              }
+            );
+          });
+          
+          console.log(`✅ Sent ${donors.length} blood request notifications`);
+        }
       });
 
       console.log(`✅ Blood request created: ${id} (${bloodGroup}, ${units} units, ${urgencyLevel})`);

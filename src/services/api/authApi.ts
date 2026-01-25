@@ -16,11 +16,12 @@ import { apiClient } from './apiClient';
 export const authApi = {
   /**
    * Login user
-   * @param credentials - Email, password, and role
+   * @param email - User email
+   * @param password - User password
    * @returns User data and authentication token
    */
-  login: async (credentials: { email: string; password: string; role: string }) => {
-    return apiClient.post('/login', credentials);
+  login: async (email: string, password: string) => {
+    return apiClient.post('/auth/login', { email, password });
   },
 
   /**
@@ -35,19 +36,14 @@ export const authApi = {
     role: string;
     bloodType?: string;
   }) => {
-    // Generate a unique ID for the user
-    const id = `${userData.role}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    return apiClient.post('/register', { 
-      id,
-      ...userData 
-    });
+    return apiClient.post('/auth/register', userData);
   },
 
   /**
    * Logout user
    */
   logout: async () => {
-    return apiClient.post('/logout', {});
+    return apiClient.post('/auth/logout', {});
   },
 
   /**
@@ -55,7 +51,7 @@ export const authApi = {
    * @param email - User email
    */
   forgotPassword: async (email: string) => {
-    return apiClient.post('/forgot-password', { email });
+    return apiClient.post('/auth/forgot-password', { email });
   },
 
   /**
@@ -64,24 +60,7 @@ export const authApi = {
    * @param otp - One-time password
    */
   verifyOTP: async (email: string, otp: string) => {
-    return apiClient.post('/verify-otp', { email, otp });
-  },
-
-  /**
-   * Get user role by email
-   * @param email - User email
-   */
-  getUserRole: async (email: string) => {
-    return apiClient.post('/get-user-role', { email });
-  },
-
-  /**
-   * Reset password
-   * @param email - User email
-   * @param newPassword - New password
-   */
-  resetPassword: async (email: string, newPassword: string) => {
-    return apiClient.post('/reset-password', { email, newPassword });
+    return apiClient.post('/auth/verify-otp', { email, otp });
   },
 };
 

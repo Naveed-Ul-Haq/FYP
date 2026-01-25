@@ -1,62 +1,63 @@
-import React, { createContext, useState, ReactNode, useContext } from 'react';
+import React, { createContext, useContext, useState, ReactNode } from 'react';
+import CustomAlert, { AlertButton } from '../components/CustomAlert';
 
-export interface Alert {
-  id: string;
+interface AlertOptions {
+  title: string;
   message: string;
-  title?: string;
-  type: 'success' | 'error' | 'info' | 'warning';
+  buttons?: AlertButton[];
+  type?: 'success' | 'error' | 'warning' | 'info';
 }
 
 interface AlertContextType {
-  alerts: Alert[];
-  addAlert: (message: string, type: Alert['type'], title?: string) => void;
-  showAlert: (alert: Omit<Alert, 'id'>) => void;
-  removeAlert: (id: string) => void;
-  clearAlerts: () => void;
+  showAlert: (options: AlertOptions) => void;
 }
 
-export const AlertContext = createContext<AlertContextType | undefined>(undefined);
+const AlertContext = createContext<AlertContextType | undefined>(undefined);
 
-export const AlertProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [alerts, setAlerts] = useState<Alert[]>([]);
+interface AlertProviderProps {
+  children: ReactNode;
+}
 
-  const addAlert = (message: string, type: Alert['type'], title?: string) => {
-    const id = Date.now().toString();
-    const newAlert = { id, message, title, type };
-    setAlerts((prev) => [...prev, newAlert]);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => removeAlert(id), 3000);
+export function AlertProvider({ children }: AlertProviderProps) {
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertOptions, setAlertOptions] = useState<AlertOptions>({
+    title: '',
+    message: '',
+    buttons: [],
+    type: 'info',
+  });
+
+  const showAlert = (options: AlertOptions) => {
+    setAlertOptions(options);
+    setAlertVisible(true);
   };
 
-  const showAlert = (alert: Omit<Alert, 'id'>) => {
-    const id = Date.now().toString();
-    const newAlert = { ...alert, id };
-    setAlerts((prev) => [...prev, newAlert]);
-    
-    // Auto-remove after 3 seconds
-    setTimeout(() => removeAlert(id), 3000);
-  };
-
-  const removeAlert = (id: string) => {
-    setAlerts((prev) => prev.filter((alert) => alert.id !== id));
-  };
-
-  const clearAlerts = () => {
-    setAlerts([]);
+  const hideAlert = () => {
+    setAlertVisible(false);
   };
 
   return (
-    <AlertContext.Provider value={{ alerts, addAlert, showAlert, removeAlert, clearAlerts }}>
+    <AlertContext.Provider value={{ showAlert }}>
       {children}
+      <CustomAlert
+        visible={alertVisible}
+        title={alertOptions.title}
+        message={alertOptions.message}
+        buttons={alertOptions.buttons}
+        type={alertOptions.type}
+        onDismiss={hideAlert}
+      />
     </AlertContext.Provider>
   );
-};
+}
 
-export const useAlert = (): AlertContextType => {
+export function useAlert() {
   const context = useContext(AlertContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error('useAlert must be used within an AlertProvider');
   }
+  
   return context;
-};
+}
+

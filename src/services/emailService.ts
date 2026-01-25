@@ -1,109 +1,96 @@
 /**
  * Email Service
  * 
- * Handles email-related operations such as sending verification codes
+ * Handles communication with backend email API
+ * Sends verification codes and verifies them
  */
 
-// Store verification codes in memory (in production, would be backend)
-const verificationCodes: Record<string, { code: string; createdAt: number }> = {};
+// Import the same API URL from api.ts to ensure consistency
+import { API_BASE_URL } from './api';
+
+const API_URL = API_BASE_URL;
+
+export interface EmailServiceResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+}
 
 /**
- * Send a verification code to the user's email
- * @param email - User's email address
- * @param purpose - Purpose of verification (registration, password-reset, etc)
- * @returns Promise with status and message
+ * Send verification code to email
+ * 
+ * @param email - Recipient email address
+ * @param purpose - 'registration' or 'password-reset'
+ * @returns Promise with response
  */
-export const sendVerificationCode = async (
+export async function sendVerificationCode(
   email: string,
-  purpose: 'registration' | 'password-reset' | 'email-change'
-): Promise<{ success: boolean; message: string }> => {
+  purpose: 'registration' | 'password-reset' = 'registration'
+): Promise<EmailServiceResponse> {
   try {
-    // Generate a 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    // Store the code with timestamp (valid for 10 minutes)
-    verificationCodes[email] = {
-      code,
-      createdAt: Date.now(),
-    };
+    const response = await fetch(`${API_URL}/send-verification-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, purpose }),
+    });
 
-    // In a real app, this would call an email service API (SendGrid, AWS SES, etc.)
-    console.log(`Verification code for ${email}: ${code}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to send verification code');
+    }
 
     return {
       success: true,
-      message: `Verification code sent to ${email}`,
+      message: data.message,
     };
   } catch (error) {
+    console.error('❌ Email service error:', error);
     return {
       success: false,
-      message: 'Failed to send verification code',
+      error: error instanceof Error ? error.message : 'Failed to send email',
     };
   }
-};
+}
 
 /**
- * Verify the code provided by the user
- * @param email - User's email address
- * @param code - Verification code entered by user
- * @returns Promise with verification status
+ * Verify code entered by user
+ * 
+ * @param email - User's email
+ * @param code - 6-digit verification code
+ * @returns Promise with response
  */
-export const verifyCode = async (
+export async function verifyCode(
   email: string,
   code: string
-): Promise<{ success: boolean; message: string }> => {
+): Promise<EmailServiceResponse> {
   try {
-    const stored = verificationCodes[email];
+    const response = await fetch(`${API_URL}/verify-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code }),
+    });
 
-    if (!stored) {
-      return {
-        success: false,
-        message: 'No verification code found. Please request a new one.',
-      };
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Invalid verification code');
     }
-
-    // Check if code is expired (10 minutes)
-    const isExpired = Date.now() - stored.createdAt > 10 * 60 * 1000;
-    if (isExpired) {
-      delete verificationCodes[email];
-      return {
-        success: false,
-        message: 'Verification code has expired. Please request a new one.',
-      };
-    }
-
-    // Check if code matches
-    if (stored.code !== code) {
-      return {
-        success: false,
-        message: 'Invalid verification code',
-      };
-    }
-
-    // Code is valid, remove it
-    delete verificationCodes[email];
 
     return {
       success: true,
-      message: 'Email verified successfully',
+      message: data.message,
     };
   } catch (error) {
+    console.error('❌ Verification error:', error);
     return {
       success: false,
-      message: 'Verification failed',
+      error: error instanceof Error ? error.message : 'Verification failed',
     };
   }
-};
+}
 
-/**
- * Resend verification code
- * @param email - User's email address
- * @param purpose - Purpose of verification
- * @returns Promise with status
- */
-export const resendVerificationCode = async (
-  email: string,
-  purpose: 'registration' | 'password-reset' | 'email-change'
-): Promise<{ success: boolean; message: string }> => {
-  return sendVerificationCode(email, purpose);
-};

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,77 +11,94 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import { StackNavigationProp } from '@react-navigation/stack';
-
 import { useAlert } from '../../context/AlertContext';
-import { RootStackParamList } from '../../navigation/types';
-import { API_BASE_URL } from '../../services/api/apiClient';
 
-/* ================= TYPES ================= */
-
+/**
+ * User Interface for Admin Panel
+ * 
+ * This interface represents a user in the system with their profile status
+ * Used for admin-level user management operations
+ */
 interface AdminUser {
   id: string;
   name: string;
   email: string;
-  role: 'donor' | 'user';
-  account_status: 'active' | 'deactivated';
+  role: 'donor' | 'user'; // 'user' = recipient
+  account_status?: string;
   deactivation_reason?: string;
-  created_at: number; // milliseconds
+  created_at: number;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
   bloodGroup?: string;
   mobile?: string;
   city?: string;
 }
 
-type NavigationProp = StackNavigationProp<
-  RootStackParamList,
-  'ManageUsers'
->;
-
-/* ================= COMPONENT ================= */
-
+/**
+ * ManageUsers Screen
+ * 
+ * Admin screen to view and manage all registered users in the system
+ * 
+ * ADMIN RESPONSIBILITIES:
+ * - View complete list of registered donors and recipients
+ * - Filter users by role (donor/recipient/all)
+ * - Search users by name or email
+ * - View user details including approval status
+ * - Monitor user registration trends
+ * 
+ * ROLE-BASED ACCESS CONTROL (RBAC):
+ * - Only accessible to users with role = 'admin'
+ * - Enforced at navigation level
+ * - Additional server-side validation recommended for production
+ */
 const ManageUsers: React.FC = () => {
-  const navigation = useNavigation<NavigationProp>();
+  const navigation = useNavigation();
   const { showAlert } = useAlert();
 
   const [users, setUsers] = useState<AdminUser[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<AdminUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedFilter, setSelectedFilter] =
-    useState<'all' | 'donor' | 'user'>('all');
+  const [selectedFilter, setSelectedFilter] = useState<'all' | 'donor' | 'user'>('all');
   const [pendingAppealsCount, setPendingAppealsCount] = useState(0);
-
-  /* ================= EFFECTS ================= */
 
   useEffect(() => {
     loadUsers();
     loadAppealsCount();
   }, []);
 
-  /* ================= API ================= */
+  useEffect(() => {
+    applyFilters();
+  }, [users, searchQuery, selectedFilter]);
 
+  /**
+   * Load all registered users from backend
+   * 
+   * Note: Uses GET /api/users endpoint
+   * In production, this should be paginated for large datasets
+   */
   const loadUsers = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/users`);
+      const response = await fetch('http://192.168.0.120:3000/api/users');
       const data = await response.json();
 
-      if (!data?.users) throw new Error('Invalid response');
+      if (data.users) {
+        // Map and enhance user data
+        const enhancedUsers = data.users.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          account_status: user.account_status || 'active',
+          deactivation_reason: user.deactivation_reason,
+          created_at: user.created_at,
+        }));
 
-      const normalizedUsers: AdminUser[] = data.users.map((u: any) => ({
-        id: u.id,
-        name: u.name,
-        email: u.email,
-        role: u.role,
-        account_status: u.account_status ?? 'active',
-        deactivation_reason: u.deactivation_reason,
-        created_at: Number(u.created_at), // already ms
-        bloodGroup: u.blood_group,
-        mobile: u.mobile,
-        city: u.city,
-      }));
-
-      setUsers(normalizedUsers);
-    } catch (error) {
+        setUsers(enhancedUsers);
+        console.log(`✅ [Admin] Loaded ${enhancedUsers.length} users`);
+      }
+    } catch (error: any) {
+      console.error('❌ [Admin] Error loading users:', error);
       showAlert({
         type: 'error',
         title: 'Error',
@@ -93,56 +110,77 @@ const ManageUsers: React.FC = () => {
     }
   };
 
+  /**
+   * Load pending appeals count
+   */
   const loadAppealsCount = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/appeals`);
+      const response = await fetch('http://192.168.0.120:3000/api/admin/appeals');
       const data = await response.json();
 
-      if (data?.success && Array.isArray(data.appeals)) {
+      if (data.success && data.appeals) {
         setPendingAppealsCount(data.appeals.length);
+        console.log(`✅ [Admin] ${data.appeals.length} pending appeals`);
       }
-    } catch {
-      /* silent */
+    } catch (error: any) {
+      console.error('❌ [Admin] Error loading appeals count:', error);
     }
   };
 
-  /* ================= FILTERING ================= */
+  /**
+   * Apply search and filter to user list
+   * 
+   * Note: Client-side filtering for responsive UI
+   * For large datasets, implement server-side filtering
+   */
+  const applyFilters = () => {
+    let filtered = users;
 
-  const filteredUsers = useMemo(() => {
-    let result = [...users];
-
+    // Apply role filter
     if (selectedFilter !== 'all') {
-      result = result.filter(u => u.role === selectedFilter);
+      filtered = filtered.filter(user => user.role === selectedFilter);
     }
 
+    // Apply search query
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter(
-        u =>
-          u.name.toLowerCase().includes(q) ||
-          u.email.toLowerCase().includes(q)
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        user =>
+          user.name.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query)
       );
     }
 
-    return result;
-  }, [users, selectedFilter, searchQuery]);
+    setFilteredUsers(filtered);
+  };
 
-  /* ================= HELPERS ================= */
-
-  const formatDate = (timestamp: number) =>
-    new Date(timestamp).toLocaleDateString();
-
+  /**
+   * Refresh user list
+   */
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadUsers();
   };
 
-  const roleBadgeStyle = (role: 'donor' | 'user') =>
-    role === 'donor'
-      ? styles.donorBadge
-      : styles.recipientBadge;
+  /**
+   * Format timestamp to readable date
+   */
+  const formatDate = (timestamp: number): string => {
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    });
+  };
 
-  /* ================= UI ================= */
+  /**
+   * Get role badge color
+   */
+  const getRoleBadgeStyle = (role: string) => {
+    return role === 'donor' 
+      ? { backgroundColor: '#FFEBEE', color: '#DC143C' }
+      : { backgroundColor: '#E3F2FD', color: '#2196F3' };
+  };
 
   if (isLoading) {
     return (
@@ -155,156 +193,500 @@ const ManageUsers: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      {/* HEADER */}
+      {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={navigation.goBack}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#fff" />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Manage Users</Text>
+        <View style={styles.headerContent}>
+          <Text style={styles.headerTitle}>Manage Users</Text>
+          <Text style={styles.headerSubtitle}>
+            {filteredUsers.length} {selectedFilter === 'all' ? 'total' : selectedFilter === 'donor' ? 'donors' : 'recipients'}
+          </Text>
+        </View>
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.content}
+        style={styles.scrollView}
+        contentContainerStyle={styles.contentContainer}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />
         }
       >
-        {/* SEARCH */}
-        <View style={styles.searchBox}>
-          <Ionicons name="search" size={18} color="#666" />
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color="#666" style={styles.searchIcon} />
           <TextInput
-            placeholder="Search users"
             style={styles.searchInput}
+            placeholder="Search by name or email..."
             value={searchQuery}
             onChangeText={setSearchQuery}
+            placeholderTextColor="#999"
           />
+          {searchQuery.length > 0 && (
+            <TouchableOpacity onPress={() => setSearchQuery('')}>
+              <Ionicons name="close-circle" size={20} color="#666" />
+            </TouchableOpacity>
+          )}
         </View>
 
-        {/* FILTERS */}
-        <View style={styles.filterRow}>
-          {['all', 'donor', 'user'].map(f => (
-            <TouchableOpacity
-              key={f}
-              style={[
-                styles.filterBtn,
-                selectedFilter === f && styles.filterBtnActive,
-              ]}
-              onPress={() => setSelectedFilter(f as any)}
-            >
-              <Text
-                style={[
-                  styles.filterText,
-                  selectedFilter === f && styles.filterTextActive,
-                ]}
-              >
-                {f.toUpperCase()}
+        {/* Appeals Banner */}
+        {pendingAppealsCount > 0 && (
+          <TouchableOpacity
+            style={styles.appealsBanner}
+            onPress={() => navigation.navigate('AppealsList' as never)}
+          >
+            <View style={styles.appealsIcon}>
+              <Ionicons name="document-text" size={28} color="#FF9800" />
+              {pendingAppealsCount > 0 && (
+                <View style={styles.appealsBadge}>
+                  <Text style={styles.appealsBadgeText}>{pendingAppealsCount}</Text>
+                </View>
+              )}
+            </View>
+            <View style={styles.appealsContent}>
+              <Text style={styles.appealsTitle}>Pending Appeals</Text>
+              <Text style={styles.appealsSubtitle}>
+                {pendingAppealsCount} user{pendingAppealsCount !== 1 ? 's' : ''} requesting account reactivation
               </Text>
-            </TouchableOpacity>
-          ))}
+            </View>
+            <Ionicons name="chevron-forward" size={24} color="#FF9800" />
+          </TouchableOpacity>
+        )}
+
+        {/* Filter Buttons */}
+        <View style={styles.filterContainer}>
+          <TouchableOpacity
+            style={[styles.filterButton, selectedFilter === 'all' && styles.filterButtonActive]}
+            onPress={() => setSelectedFilter('all')}
+          >
+            <Text style={[styles.filterText, selectedFilter === 'all' && styles.filterTextActive]}>
+              All ({users.length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, selectedFilter === 'donor' && styles.filterButtonActive]}
+            onPress={() => setSelectedFilter('donor')}
+          >
+            <Text style={[styles.filterText, selectedFilter === 'donor' && styles.filterTextActive]}>
+              Donors ({users.filter(u => u.role === 'donor').length})
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.filterButton, selectedFilter === 'user' && styles.filterButtonActive]}
+            onPress={() => setSelectedFilter('user')}
+          >
+            <Text style={[styles.filterText, selectedFilter === 'user' && styles.filterTextActive]}>
+              Recipients ({users.filter(u => u.role === 'user').length})
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* USERS */}
-        {filteredUsers.length === 0 ? (
-          <Text style={styles.emptyText}>No users found</Text>
-        ) : (
-          filteredUsers.map(user => (
-            <TouchableOpacity
-              key={user.id}
-              style={styles.userCard}
-              onPress={() =>
-                navigation.navigate('UserProfileDetail', {
-                  userId: user.id,
-                })
-              }
-            >
-              <View style={styles.userRow}>
-                <Ionicons
-                  name={user.role === 'donor' ? 'water' : 'medkit'}
-                  size={22}
-                  color={user.role === 'donor' ? '#DC143C' : '#2196F3'}
-                />
-                <View style={styles.userInfo}>
-                  <Text style={styles.userName}>{user.name}</Text>
-                  <Text style={styles.userEmail}>{user.email}</Text>
-                </View>
-              </View>
+        {/* Statistics Card */}
+        <View style={styles.statsCard}>
+          <View style={styles.statItem}>
+            <Ionicons name="people" size={24} color="#DC143C" />
+            <Text style={styles.statValue}>{users.length}</Text>
+            <Text style={styles.statLabel}>Total Users</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Ionicons name="water" size={24} color="#DC143C" />
+            <Text style={styles.statValue}>{users.filter(u => u.role === 'donor').length}</Text>
+            <Text style={styles.statLabel}>Donors</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Ionicons name="medkit" size={24} color="#2196F3" />
+            <Text style={styles.statValue}>{users.filter(u => u.role === 'user').length}</Text>
+            <Text style={styles.statLabel}>Recipients</Text>
+          </View>
+        </View>
 
-              <View style={styles.userMeta}>
-                <Text style={styles.metaText}>
-                  Registered: {formatDate(user.created_at)}
-                </Text>
-                <View style={[styles.roleBadge, roleBadgeStyle(user.role)]}>
-                  <Text style={styles.roleBadgeText}>
-                    {user.role.toUpperCase()}
-                  </Text>
+        {/* Users List */}
+        {filteredUsers.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Ionicons name="people-outline" size={64} color="#ccc" />
+            <Text style={styles.emptyTitle}>No Users Found</Text>
+            <Text style={styles.emptySubtitle}>
+              {searchQuery ? 'Try adjusting your search' : 'No registered users yet'}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.usersList}>
+            {filteredUsers.map((user) => (
+              <TouchableOpacity
+                key={user.id}
+                style={styles.userCard}
+                onPress={() => navigation.navigate('UserProfileDetail' as never, { userId: user.id } as never)}
+              >
+                <View style={styles.userHeader}>
+                  <View style={styles.userIconContainer}>
+                    <Ionicons
+                      name={user.role === 'donor' ? 'water' : 'medkit'}
+                      size={24}
+                      color={user.role === 'donor' ? '#DC143C' : '#2196F3'}
+                    />
+                  </View>
+                  <View style={styles.userInfo}>
+                    <Text style={styles.userName}>{user.name}</Text>
+                    <Text style={styles.userEmail}>{user.email}</Text>
+                  </View>
+                  {user.account_status === 'deactivated' && (
+                    <View style={styles.deactivatedBadge}>
+                      <Ionicons name="ban" size={16} color="#F44336" />
+                    </View>
+                  )}
                 </View>
-              </View>
-            </TouchableOpacity>
-          ))
+
+                <View style={styles.userDetails}>
+                  <View style={styles.userDetailRow}>
+                    <Ionicons name="calendar" size={16} color="#666" />
+                    <Text style={styles.userDetailText}>
+                      Registered: {formatDate(user.created_at)}
+                    </Text>
+                  </View>
+                  <View style={[
+                    styles.roleBadge,
+                    getRoleBadgeStyle(user.role)
+                  ]}>
+                    <Text style={[styles.roleBadgeText, { color: getRoleBadgeStyle(user.role).color }]}>
+                      {user.role === 'donor' ? 'DONOR' : 'RECIPIENT'}
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Deactivation Notice */}
+                {user.account_status === 'deactivated' && (
+                  <View style={styles.deactivatedNotice}>
+                    <Ionicons name="warning" size={14} color="#F44336" />
+                    <Text style={styles.deactivatedText}>Account Deactivated</Text>
+                  </View>
+                )}
+
+                {/* View Details Indicator */}
+                <View style={styles.viewDetailsIndicator}>
+                  <Text style={styles.viewDetailsText}>Tap to view details</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#999" />
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
         )}
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            Total Registered Users: {users.length}
+          </Text>
+        </View>
       </ScrollView>
     </View>
   );
 };
 
-/* ================= STYLES ================= */
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#f8f9fa' },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: 10, color: '#666' },
+  container: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f8f9fa',
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
+  },
   header: {
     backgroundColor: '#DC143C',
     paddingTop: 50,
     paddingBottom: 20,
     paddingHorizontal: 20,
     flexDirection: 'row',
-    gap: 16,
     alignItems: 'center',
   },
-  headerTitle: { color: '#fff', fontSize: 22, fontWeight: 'bold' },
-  content: { padding: 16 },
-  searchBox: {
+  backButton: {
+    marginRight: 15,
+    padding: 5,
+  },
+  headerContent: {
+    flex: 1,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  headerSubtitle: {
+    fontSize: 14,
+    color: '#fff',
+    opacity: 0.9,
+    marginTop: 4,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  contentContainer: {
+    padding: 15,
+  },
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 10,
-    marginBottom: 12,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  searchInput: { marginLeft: 8, flex: 1 },
-  filterRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  filterBtn: {
+  searchIcon: {
+    marginRight: 10,
+  },
+  searchInput: {
     flex: 1,
-    padding: 10,
-    borderRadius: 8,
+    fontSize: 15,
+    color: '#333',
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    marginBottom: 15,
+    gap: 10,
+  },
+  filterButton: {
+    flex: 1,
     backgroundColor: '#fff',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e0e0e0',
+  },
+  filterButtonActive: {
+    backgroundColor: '#DC143C',
+    borderColor: '#DC143C',
+  },
+  filterText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#666',
+  },
+  filterTextActive: {
+    color: '#fff',
+  },
+  appealsBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFF8E1',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#FF9800',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  appealsIcon: {
+    position: 'relative',
+    marginRight: 12,
+  },
+  appealsBadge: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#F44336',
+    borderRadius: 12,
+    minWidth: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 6,
+  },
+  appealsBadgeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: 'bold',
+  },
+  appealsContent: {
+    flex: 1,
+  },
+  appealsTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#FF9800',
+    marginBottom: 4,
+  },
+  appealsSubtitle: {
+    fontSize: 13,
+    color: '#666',
+  },
+  statsCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    flexDirection: 'row',
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  statItem: {
+    flex: 1,
     alignItems: 'center',
   },
-  filterBtnActive: { backgroundColor: '#DC143C' },
-  filterText: { fontWeight: '600', color: '#666' },
-  filterTextActive: { color: '#fff' },
+  statValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 8,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginTop: 4,
+  },
+  statDivider: {
+    width: 1,
+    backgroundColor: '#e0e0e0',
+    marginHorizontal: 12,
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 60,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 16,
+  },
+  emptySubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 8,
+  },
+  usersList: {
+    gap: 12,
+  },
   userCard: {
     backgroundColor: '#fff',
     borderRadius: 12,
-    padding: 14,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  userHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginBottom: 12,
   },
-  userRow: { flexDirection: 'row', gap: 12, alignItems: 'center' },
-  userInfo: { flex: 1 },
-  userName: { fontWeight: 'bold', fontSize: 15 },
-  userEmail: { fontSize: 13, color: '#666' },
-  userMeta: {
-    marginTop: 10,
+  userIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 12,
+  },
+  userInfo: {
+    flex: 1,
+  },
+  userName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  userEmail: {
+    fontSize: 13,
+    color: '#666',
+    marginTop: 2,
+  },
+  userDetails: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  metaText: { fontSize: 12, color: '#666' },
-  roleBadge: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  donorBadge: { backgroundColor: '#FFEBEE' },
-  recipientBadge: { backgroundColor: '#E3F2FD' },
-  roleBadgeText: { fontSize: 11, fontWeight: 'bold' },
-  emptyText: { textAlign: 'center', color: '#999', marginTop: 40 },
+  userDetailRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  userDetailText: {
+    fontSize: 13,
+    color: '#666',
+  },
+  roleBadge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  roleBadgeText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  deactivatedBadge: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFEBEE',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deactivatedNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 6,
+    marginTop: 12,
+  },
+  deactivatedText: {
+    fontSize: 12,
+    color: '#F44336',
+    fontWeight: '600',
+  },
+  viewDetailsIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    gap: 4,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  viewDetailsText: {
+    fontSize: 12,
+    color: '#999',
+    fontStyle: 'italic',
+  },
+  footer: {
+    paddingVertical: 30,
+    alignItems: 'center',
+  },
+  footerText: {
+    fontSize: 12,
+    color: '#999',
+  },
 });
 
 export default ManageUsers;
+
