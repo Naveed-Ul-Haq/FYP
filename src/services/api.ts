@@ -12,8 +12,8 @@
  */
 
 // API Base URL - Update this to match your backend IP
-// Current IP: 192.168.10.8 (verified: Dec 26, 2025)
-export const API_BASE_URL = 'http://192.168.10.8:3000/api';
+// Current IP: 10.29.40.18 (verified: Jan 26, 2026)
+export const API_BASE_URL = 'http://10.29.40.18:3000/api';
 
 /**
  * Generic API request handler with improved error handling

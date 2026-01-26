@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 // Recipient Screens
 import UserHomeScreen from '../screens/user/UserHomeScreen';
 import RecipientProfileForm from '../screens/user/RecipientProfileForm';
+import RecipientProfile from '../screens/user/RecipientProfile';
 
 /**
  * Recipient Stack Navigator

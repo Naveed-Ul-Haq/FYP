@@ -117,15 +117,13 @@ export default function DonorHomeScreen() {
     }
   };
 
-  /**
-   * Load recent donations
-   */
+
   const loadRecentDonations = async () => {
     if (!user?.id) return;
     
     try {
       setLoadingDonations(true);
-      const response = await fetch(`http://192.168.0.120:3000/api/donor/${user.id}/recent-donations?limit=5`);
+      const response = await fetch(`http://10.29.40.18:3000/api/donor/${user.id}/recent-donations?limit=5`);
       const data = await response.json();
       
       if (data.success) {
@@ -139,9 +137,7 @@ export default function DonorHomeScreen() {
     }
   };
 
-  /**
-   * Load available requests count
-   */
+
   const updateAvailableCount = async () => {
     if (!user?.id) return;
     
@@ -154,13 +150,10 @@ export default function DonorHomeScreen() {
     }
   };
 
-  /**
-   * Polling effect for real-time updates (1 second)
-   */
+
   useEffect(() => {
     updateAvailableCount();
     
-    // Poll for updates every 1 second
     const interval = setInterval(() => {
       updateAvailableCount();
       loadDonorStats();
@@ -169,10 +162,7 @@ export default function DonorHomeScreen() {
     return () => clearInterval(interval);
   }, [user]);
 
-  /**
-   * Reload data when screen comes into focus
-   * Ensures real-time updates after accepting/declining or creating requests
-   */
+
   useFocusEffect(
     React.useCallback(() => {
       updateAvailableCount();
@@ -222,10 +212,7 @@ export default function DonorHomeScreen() {
         </TouchableOpacity>
 
         <View style={styles.headerContent}>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>DONOR</Text>
-          </View>
-          <Text style={styles.headerTitle}>{user?.name || 'Donor'}</Text>
+          {/* Removed role badge and dashboard title for consistency */}
         </View>
 
         {/* Notification Bell Icon (Right) */}

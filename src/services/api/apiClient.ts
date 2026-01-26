@@ -15,7 +15,7 @@
 // import axios from 'axios';
 // import { getSecureToken } from '../storage/secureStorage';
 
-const BASE_URL = 'https://api.bdms.example.com/v1';
+const BASE_URL = 'http://10.29.40.18:3000/api';
 
 /**
  * API Client class
@@ -33,14 +33,16 @@ class ApiClient {
    */
   async get(endpoint: string, config?: any) {
     try {
-      // const token = await getSecureToken();
-      // const response = await axios.get(`${this.baseURL}${endpoint}`, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      //   ...config
-      // });
-      // return response.data;
-      console.log(`GET ${this.baseURL}${endpoint}`);
-      return null;
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config && config.headers ? config.headers : {})
+        },
+        ...config
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
     } catch (error) {
       this.handleError(error);
     }
@@ -51,14 +53,17 @@ class ApiClient {
    */
   async post(endpoint: string, data: any, config?: any) {
     try {
-      // const token = await getSecureToken();
-      // const response = await axios.post(`${this.baseURL}${endpoint}`, data, {
-      //   headers: { Authorization: `Bearer ${token}` },
-      //   ...config
-      // });
-      // return response.data;
-      console.log(`POST ${this.baseURL}${endpoint}`, data);
-      return null;
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config && config.headers ? config.headers : {})
+        },
+        body: JSON.stringify(data),
+        ...config
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
     } catch (error) {
       this.handleError(error);
     }
@@ -69,8 +74,17 @@ class ApiClient {
    */
   async put(endpoint: string, data: any, config?: any) {
     try {
-      console.log(`PUT ${this.baseURL}${endpoint}`, data);
-      return null;
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config && config.headers ? config.headers : {})
+        },
+        body: JSON.stringify(data),
+        ...config
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
     } catch (error) {
       this.handleError(error);
     }
@@ -81,8 +95,16 @@ class ApiClient {
    */
   async delete(endpoint: string, config?: any) {
     try {
-      console.log(`DELETE ${this.baseURL}${endpoint}`);
-      return null;
+      const response = await fetch(`${this.baseURL}${endpoint}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(config && config.headers ? config.headers : {})
+        },
+        ...config
+      });
+      if (!response.ok) throw new Error(await response.text());
+      return await response.json();
     } catch (error) {
       this.handleError(error);
     }

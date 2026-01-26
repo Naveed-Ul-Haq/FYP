@@ -62,5 +62,14 @@ export const authApi = {
   verifyOTP: async (email: string, otp: string) => {
     return apiClient.post('/auth/verify-otp', { email, otp });
   },
+
+  /**
+   * Get user's role by email (for intelligent login)
+   * @param email - User email
+   * @returns User role
+   */
+  getUserRole: async (email: string) => {
+    return apiClient.post('/get-user-role', { email });
+  },
 };
 
