@@ -1,9 +1,3 @@
-/**
- * Notification Context
- * 
- * Manages push notifications and navigation
- */
-
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
@@ -29,9 +23,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const notificationListener = useRef<Notifications.Subscription | null>(null);
 
-  /**
-   * Request permissions and set up listeners on mount
-   */
   useEffect(() => {
     async function setup() {
       const granted = await registerForPushNotificationsAsync();
@@ -53,9 +44,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
   }, []);
 
-  /**
-   * Start/stop polling based on user login status
-   */
   useEffect(() => {
     if (user?.id && notificationsEnabled) {
       console.log('✅ Starting notification polling for user:', user.id);
@@ -70,9 +58,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     };
   }, [user?.id, notificationsEnabled]);
 
-  /**
-   * Handle notification tap - navigate to relevant screen
-   */
   const handleNotificationTap = (notification: Notifications.Notification) => {
     try {
       const data = notification.request.content.data;

@@ -42,9 +42,6 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
   const [isSendingCode, setIsSendingCode] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  /**
-   * Check if email is registered in the database
-   */
   const checkEmailExists = async (emailToCheck: string): Promise<boolean> => {
     try {
       const response = await fetch(`${API_BASE_URL.replace('/api', '')}/api/check-email`, {
@@ -66,9 +63,6 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
     }
   };
 
-  /**
-   * Check if account exists and send verification code
-   */
   const handleSendCode = async () => {
     // Validate email
     if (!email.trim()) {
@@ -139,10 +133,6 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
       setIsSendingCode(false);
     }
   };
-
-  /**
-   * Verify the code entered by user
-   */
   const handleVerifyCode = async () => {
     if (!verificationCode.trim()) {
       showAlert({
@@ -192,11 +182,8 @@ export default function ForgotPasswordScreen({ navigation, route }: Props) {
     }
   };
 
-  /**
-   * Reset password with new password
-   */
   const handleResetPassword = async () => {
-    // Validate passwords
+
     if (!newPassword) {
       showAlert({
         type: 'warning',

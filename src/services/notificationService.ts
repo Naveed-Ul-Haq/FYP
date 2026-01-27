@@ -1,21 +1,6 @@
-/**
- * Notification Service
- * 
- * Notification Management Service
- * 
- * This service handles all notification-related operations including:
- * - Fetching notifications for a user
- * - Getting unread notification count
- * - Marking notifications as read
- * - Deleting notifications
- */
-
 import { API_BASE_URL } from './api';
 import { Notification } from '../types/notification.types';
 
-/**
- * Get all notifications for a user
- */
 export async function getNotifications(
   userId: string,
   unreadOnly: boolean = false
@@ -36,9 +21,6 @@ export async function getNotifications(
   }
 }
 
-/**
- * Get count of unread notifications
- */
 export async function getUnreadNotificationCount(userId: string): Promise<number> {
   try {
     const response = await fetch(`${API_BASE_URL}/notifications/${userId}/unread-count`);
@@ -55,9 +37,6 @@ export async function getUnreadNotificationCount(userId: string): Promise<number
   }
 }
 
-/**
- * Mark a notification as read
- */
 export async function markNotificationAsRead(notificationId: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}/read`, {
@@ -72,9 +51,6 @@ export async function markNotificationAsRead(notificationId: string): Promise<bo
   }
 }
 
-/**
- * Mark all notifications as read for a user
- */
 export async function markAllNotificationsAsRead(userId: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/notifications/${userId}/mark-all-read`, {
@@ -89,9 +65,6 @@ export async function markAllNotificationsAsRead(userId: string): Promise<boolea
   }
 }
 
-/**
- * Delete a notification
- */
 export async function deleteNotification(notificationId: string): Promise<boolean> {
   try {
     const response = await fetch(`${API_BASE_URL}/notifications/${notificationId}`, {
@@ -105,9 +78,6 @@ export async function deleteNotification(notificationId: string): Promise<boolea
   }
 }
 
-/**
- * Format notification timestamp
- */
 export function formatNotificationTime(timestamp: number): string {
   const now = Math.floor(Date.now() / 1000);
   const diff = now - timestamp;
@@ -129,9 +99,6 @@ export function formatNotificationTime(timestamp: number): string {
   }
 }
 
-/**
- * Get notification icon name based on type
- */
 export function getNotificationIcon(type: string): string {
   switch (type) {
     case 'PROFILE_APPROVAL_REQUEST':
@@ -163,9 +130,6 @@ export function getNotificationIcon(type: string): string {
   }
 }
 
-/**
- * Get notification color based on type
- */
 export function getNotificationColor(type: string): string {
   switch (type) {
     case 'PROFILE_APPROVAL_REQUEST':

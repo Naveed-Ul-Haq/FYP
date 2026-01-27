@@ -1,13 +1,6 @@
-/**
- * Push Notification Service
- * 
- * Handles actual push notifications with navigation
- */
-
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
-// Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -16,9 +9,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-/**
- * Request notification permissions
- */
 export async function registerForPushNotificationsAsync() {
   let token;
   
@@ -48,9 +38,6 @@ export async function registerForPushNotificationsAsync() {
   return true;
 }
 
-/**
- * Show local push notification
- */
 export async function showPushNotification(
   title: string,
   body: string,
@@ -74,9 +61,6 @@ export async function showPushNotification(
   }
 }
 
-/**
- * Get notification type details for display
- */
 export function getNotificationDetails(type: string) {
   switch (type) {
     case 'PROFILE_APPROVAL_REQUEST':
@@ -143,9 +127,6 @@ export function getNotificationDetails(type: string) {
   }
 }
 
-/**
- * Setup notification response listener (for when user taps notification)
- */
 export function setupNotificationListener(
   onNotificationTap: (notification: Notifications.Notification) => void
 ) {
@@ -156,10 +137,6 @@ export function setupNotificationListener(
 
   return subscription;
 }
-
-/**
- * Cancel all notifications
- */
 export async function cancelAllNotifications() {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }

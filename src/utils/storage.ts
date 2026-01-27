@@ -1,15 +1,3 @@
-/**
- * Storage Utilities
- * Wrapper functions for AsyncStorage (to be implemented with @react-native-async-storage/async-storage)
- */
-
-/**
- * Note: Install @react-native-async-storage/async-storage to use these functions
- * npm install @react-native-async-storage/async-storage
- */
-
-// Placeholder functions - implement with actual AsyncStorage when ready
-
 export async function saveData(key: string, value: any): Promise<void> {
   try {
     // await AsyncStorage.setItem(key, JSON.stringify(value));
@@ -22,8 +10,7 @@ export async function saveData(key: string, value: any): Promise<void> {
 
 export async function getData(key: string): Promise<any> {
   try {
-    // const value = await AsyncStorage.getItem(key);
-    // return value ? JSON.parse(value) : null;
+   
     console.log(`Getting ${key}`);
     return null;
   } catch (error) {

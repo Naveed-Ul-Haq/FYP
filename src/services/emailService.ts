@@ -1,11 +1,3 @@
-/**
- * Email Service
- * 
- * Handles communication with backend email API
- * Sends verification codes and verifies them
- */
-
-// Import the same API URL from api.ts to ensure consistency
 import { API_BASE_URL } from './api';
 
 const API_URL = API_BASE_URL;

@@ -1,16 +1,3 @@
-/**
- * Authentication API Service
- * 
- * Handles all authentication-related API calls
- * 
- * Endpoints:
- * - POST /auth/login
- * - POST /auth/register
- * - POST /auth/logout
- * - POST /auth/forgot-password
- * - POST /auth/verify-otp
- */
-
 import { apiClient } from './apiClient';
 
 export const authApi = {
@@ -39,9 +26,6 @@ export const authApi = {
     return apiClient.post('/auth/register', userData);
   },
 
-  /**
-   * Logout user
-   */
   logout: async () => {
     return apiClient.post('/auth/logout', {});
   },

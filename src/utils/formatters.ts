@@ -1,11 +1,3 @@
-/**
- * Formatting Utilities
- * Functions to format data for display
- */
-
-/**
- * Format date to readable string
- */
 export function formatDate(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   
@@ -18,9 +10,6 @@ export function formatDate(date: Date | string): string {
   return d.toLocaleDateString('en-US', options);
 }
 
-/**
- * Format time to readable string
- */
 export function formatTime(date: Date | string): string {
   const d = typeof date === 'string' ? new Date(date) : date;
   
@@ -30,9 +19,6 @@ export function formatTime(date: Date | string): string {
   });
 }
 
-/**
- * Calculate days until next donation
- */
 export function daysUntilNextDonation(lastDonationDate: Date | string): number {
   const last = typeof lastDonationDate === 'string' 
     ? new Date(lastDonationDate) 
@@ -48,9 +34,6 @@ export function daysUntilNextDonation(lastDonationDate: Date | string): number {
   return Math.max(0, diffDays);
 }
 
-/**
- * Format distance to location
- */
 export function formatDistance(meters: number): string {
   if (meters < 1000) {
     return `${Math.round(meters)}m`;

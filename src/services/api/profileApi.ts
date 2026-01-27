@@ -1,9 +1,3 @@
-/**
- * Profile API Service
- * 
- * Handles all profile-related API calls
- */
-
 import { apiClient } from './apiClient';
 
 export const profileApi = {

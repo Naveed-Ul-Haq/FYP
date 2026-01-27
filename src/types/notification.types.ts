@@ -1,12 +1,3 @@
-/**
- * Notification Type Definitions
- * 
- * Push Notification System
- * 
- * This system provides real-time notifications to users about important events.
- * Notifications help keep users informed and improve engagement.
- */
-
 export type NotificationType =
   | 'PROFILE_APPROVAL_REQUEST'
   | 'PROFILE_APPROVED'

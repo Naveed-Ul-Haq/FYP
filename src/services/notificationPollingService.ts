@@ -1,9 +1,3 @@
-/**
- * Notification Polling Service
- * 
- * Polls backend for new notifications and shows push notifications
- */
-
 import { getNotifications, getUnreadNotificationCount } from './notificationService';
 import { showPushNotification, getNotificationDetails } from './pushNotificationService';
 import { Notification } from '../types/notification.types';
@@ -12,9 +6,6 @@ let lastNotificationCount = 0;
 let lastCheckedNotifications: string[] = [];
 let pollingInterval: NodeJS.Timeout | null = null;
 
-/**
- * Start polling for notifications
- */
 export function startNotificationPolling(userId: string) {
   // Clear any existing interval
   if (pollingInterval) {
@@ -32,9 +23,6 @@ export function startNotificationPolling(userId: string) {
   console.log('✅ Notification polling started for user:', userId);
 }
 
-/**
- * Stop polling
- */
 export function stopNotificationPolling() {
   if (pollingInterval) {
     clearInterval(pollingInterval);
@@ -43,9 +31,6 @@ export function stopNotificationPolling() {
   }
 }
 
-/**
- * Check for new notifications and show push notifications
- */
 async function checkForNewNotifications(userId: string) {
   try {
     // Get all notifications
@@ -85,9 +70,6 @@ async function checkForNewNotifications(userId: string) {
   }
 }
 
-/**
- * Reset notification tracking (e.g., after marking as read)
- */
 export function resetNotificationTracking() {
   lastCheckedNotifications = [];
   lastNotificationCount = 0;

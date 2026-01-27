@@ -8,10 +8,6 @@ interface ButtonProps {
   style?: ViewStyle;
 }
 
-/**
- * Button Component
- * Reusable button with primary and secondary variants
- */
 export default function Button({ title, onPress, variant = 'primary', style }: ButtonProps) {
   return (
     <TouchableOpacity 

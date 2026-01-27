@@ -1,15 +1,3 @@
-/**
- * Admin Profile Screen
- * 
- * Admin Profile Management
- * 
- * This screen allows administrators to:
- * - View their profile information
- * - Update email address (with verification code)
- * - Change password (with verification code)
- * - Manage account settings
- */
-
 import React, { useState } from 'react';
 import {
   View,
@@ -47,9 +35,6 @@ const AdminProfile: React.FC = () => {
   const [passwordCodeSent, setPasswordCodeSent] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
 
-  /**
-   * Send verification code for email update
-   */
   const handleSendEmailCode = async () => {
     if (!newEmail || !newEmail.includes('@')) {
       showAlert({
@@ -62,7 +47,7 @@ const AdminProfile: React.FC = () => {
 
     try {
       setEmailLoading(true);
-      const response = await fetch('http://10.29.40.18:3000/api/send-verification', {
+      const response = await fetch('http://10.29.40.21:3000/api/send-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -94,9 +79,6 @@ const AdminProfile: React.FC = () => {
     }
   };
 
-  /**
-   * Update email address
-   */
   const handleUpdateEmail = async () => {
     if (!emailVerificationCode) {
       showAlert({
@@ -111,7 +93,7 @@ const AdminProfile: React.FC = () => {
       setEmailLoading(true);
       
       // Verify code
-      const verifyResponse = await fetch('http://10.29.40.18:3000/api/verify-code', {
+      const verifyResponse = await fetch('http://10.29.40.21:3000/api/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -126,7 +108,7 @@ const AdminProfile: React.FC = () => {
       }
 
       // Update email
-      const updateResponse = await fetch(`http://10.29.40.18:3000/api/admin/update-email`, {
+      const updateResponse = await fetch(`http://10.29.40.21:3000/api/admin/update-email`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -198,7 +180,7 @@ const AdminProfile: React.FC = () => {
 
     try {
       setPasswordLoading(true);
-      const response = await fetch('http://10.29.40.18:3000/api/send-verification', {
+      const response = await fetch('http://10.29.40.21:3000/api/send-verification', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -230,9 +212,6 @@ const AdminProfile: React.FC = () => {
     }
   };
 
-  /**
-   * Change password
-   */
   const handleChangePassword = async () => {
     if (!passwordVerificationCode) {
       showAlert({
@@ -247,7 +226,7 @@ const AdminProfile: React.FC = () => {
       setPasswordLoading(true);
       
       // Verify code
-      const verifyResponse = await fetch('http://10.29.40.18:3000/api/verify-code', {
+      const verifyResponse = await fetch('http://10.29.40.21:3000/api/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -262,7 +241,7 @@ const AdminProfile: React.FC = () => {
       }
 
       // Change password
-      const updateResponse = await fetch('http://10.29.40.18:3000/api/reset-password', {
+      const updateResponse = await fetch('http://10.29.40.21:3000/api/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
