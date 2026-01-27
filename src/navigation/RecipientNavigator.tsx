@@ -8,24 +8,6 @@ import UserHomeScreen from '../screens/user/UserHomeScreen';
 import RecipientProfileForm from '../screens/user/RecipientProfileForm';
 import RecipientProfile from '../screens/user/RecipientProfile';
 
-/**
- * Recipient Stack Navigator
- * 
- * Internal navigation for Recipient role users.
- * 
- * Screens:
- * 1. UserHome - Main dashboard (renamed to RecipientHome in context)
- * 2. RecipientProfileForm - Complete profile for admin approval
- * 3. CreateBloodRequest - Form to create new blood request
- * 4. RequestStatus - Real-time status tracking of requests
- * 
- * Navigation Flow:
- * UserHome → RecipientProfileForm / CreateBloodRequest → RequestStatus → UserHome
- * 
- * This navigator is only accessible to authenticated users with 'user' role
- * (Recipient in the context of blood requests)
- */
-
 export type RecipientStackParamList = {
   UserHome: undefined;
   RecipientProfileForm: undefined;
@@ -40,12 +22,6 @@ export type RecipientStackParamList = {
 
 const Stack = createStackNavigator<RecipientStackParamList>();
 
-/**
- * RecipientNavigator Component
- * 
- * Provides internal navigation structure for Recipient users.
- * Includes custom header styling and back button configuration.
- */
 const RecipientNavigator: React.FC = () => {
   return (
     <Stack.Navigator
@@ -69,8 +45,7 @@ const RecipientNavigator: React.FC = () => {
         name="UserHome"
         component={UserHomeScreen}
         options={{
-          headerTitle: 'Recipient Dashboard',
-          headerLeft: () => null, // No back button on home
+          headerShown: false, // Using custom AppHeader in component
         }}
       />
 

@@ -5,28 +5,6 @@ import { Ionicons } from '@expo/vector-icons';
 // Donor Screens
 import DonorHomeScreen from '../screens/donor/DonorHomeScreen';
 import DonorProfile from '../screens/donor/DonorProfile';
-/**
- * Donor Stack Navigator
- * 
- * Internal navigation for Donor role users.
- * 
- * Screens:
- * 1. DonorHome - Main dashboard with donation history and stats
- * 2. DonorProfileForm - Complete profile for admin approval
- * 3. AvailableRequests - Browse and accept blood requests from recipients
- * 
- * Navigation Flow:
- * DonorHome → DonorProfileForm / AvailableRequests → DonorHome
- * 
- * This navigator is only accessible to authenticated users with 'donor' role
- * 
- * Note: Donor Request Matching Module
- * This implements the donor-side of the blood request matching algorithm:
- * - Donors view available requests
- * - Donors can accept/decline requests
- * - Multiple donors can accept the same request (pool of donors)
- * - Recipient will choose from accepted donors (future feature)
- */
 
 export type DonorStackParamList = {
   DonorHome: undefined;
@@ -41,12 +19,6 @@ export type DonorStackParamList = {
 
 const Stack = createStackNavigator<DonorStackParamList>();
 
-/**
- * DonorNavigator Component
- * 
- * Provides internal navigation structure for Donor users.
- * Includes custom header styling and back button configuration.
- */
 const DonorNavigator: React.FC = () => {
   return (
     <Stack.Navigator
@@ -70,8 +42,7 @@ const DonorNavigator: React.FC = () => {
         name="DonorHome"
         component={DonorHomeScreen}
         options={{
-          headerTitle: 'Donor Dashboard',
-          headerLeft: () => null, // No back button on home
+          headerShown: false, // Using custom AppHeader in component
         }}
       />
 
