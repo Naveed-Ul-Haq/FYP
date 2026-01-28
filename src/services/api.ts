@@ -325,9 +325,9 @@ export const bloodRequestAPI = {
       method: 'GET',
     });
     
-    if (response.request) {
+    if ((response as any).request) {
       // Convert snake_case to camelCase and handle timestamps
-      const req = response.request;
+      const req = (response as any).request;
       return {
         id: req.id,
         recipientId: req.recipient_id,

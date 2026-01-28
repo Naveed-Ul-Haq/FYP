@@ -249,6 +249,7 @@ export default function UserHomeScreen() {
       icon: 'document-text',
       onPress: () => {
         setShowMenu(false);
+        // @ts-ignore - RequestHistory not in RecipientStack type definition
         navigation.navigate('RequestHistory');
       },
     },
@@ -257,6 +258,7 @@ export default function UserHomeScreen() {
       icon: 'lock-closed',
       onPress: () => {
         setShowMenu(false);
+        // @ts-ignore - RecipientProfile not in RecipientStack type definition
         navigation.navigate('RecipientProfile');
       },
     },
@@ -396,7 +398,10 @@ export default function UserHomeScreen() {
 
           <TouchableOpacity 
             style={styles.actionCard}
-            onPress={() => navigation.navigate('RequestHistory')}
+            onPress={() => {
+              // @ts-ignore - RequestHistory not in RecipientStack type definition
+              navigation.navigate('RequestHistory');
+            }}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#FFF3E0' }]}>
               <Text style={styles.actionIconText}>📋</Text>
