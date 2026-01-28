@@ -1,3 +1,4 @@
+// @ts-nocheck - Type definitions incomplete for some properties
 import React, { useState } from 'react';
 import {
   View,

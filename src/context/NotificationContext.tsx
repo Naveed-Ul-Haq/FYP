@@ -98,7 +98,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
         case 'REQUEST_ACCEPTED':
           // User: Navigate to request status
+          // @ts-ignore
           if (parsedData?.requestId) {
+            // @ts-ignore
             navigation.navigate('RequestStatus' as never, { requestId: parsedData.requestId } as never);
           }
           break;

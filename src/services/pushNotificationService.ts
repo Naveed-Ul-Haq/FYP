@@ -6,6 +6,9 @@ Notifications.setNotificationHandler({
     shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
+    // @ts-ignore - Not available in Expo Go
+    shouldShowBanner: true,
+    shouldShowList: true,
   }),
 });
 

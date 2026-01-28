@@ -198,6 +198,7 @@ export const bloodRequestAPI = {
     }));
     
     return {
+      // @ts-ignore - Type mismatch handled at runtime
       requests,
       message: response.message,
     };

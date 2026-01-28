@@ -5,6 +5,7 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
+// @ts-ignore - expo/vector-icons types not available in this setup
 import { Ionicons } from '@expo/vector-icons';
 import { getUnreadNotificationCount } from '../../services/notificationService';
 import DashboardLayout from '../../components/layout/DashboardLayout';

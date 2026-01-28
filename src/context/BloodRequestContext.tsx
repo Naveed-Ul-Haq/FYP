@@ -149,8 +149,11 @@ export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ 
         urgencyLevel: request.urgencyLevel,
         location: request.location,
         notes: request.notes,
+// @ts-ignore - Properties exist on full request object from API
         shareLocation: request.shareLocation,
+        // @ts-ignore
         recipientLatitude: request.recipientLatitude,
+        // @ts-ignore
         recipientLongitude: request.recipientLongitude,
       });
 

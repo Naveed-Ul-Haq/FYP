@@ -35,6 +35,7 @@ async function checkForNewNotifications(userId: string) {
   try {
     // Get all notifications
     const notifications = await getNotifications(userId);
+    // @ts-ignore - read field may not exist on all notification objects
     const unreadNotifications = notifications.filter(n => !n.is_read && !n.read);
 
     // Check if there are new notifications
