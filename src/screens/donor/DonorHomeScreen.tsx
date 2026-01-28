@@ -71,11 +71,9 @@ export default function DonorHomeScreen() {
       console.log('📋 [Profile Status] Response:', response);
       
       if (response.success && response.profile) {
-        const status = response.profile.approval_status || response.profile.approvalStatus;
-        console.log('✅ [Profile Status] Current status:', status);
-        
-        setProfileStatus(status.toLowerCase());
-        setProfileRemarks(response.profile.admin_remarks || response.profile.adminRemarks || '');
+        const status = response.profile.approvalStatus || 'none';
+        setProfileStatus(status.toLowerCase() as any);
+        setProfileRemarks(response.profile.adminRemarks || '');
       } else {
         console.log('⚠️ [Profile Status] No profile found');
         setProfileStatus('none');
@@ -125,7 +123,7 @@ export default function DonorHomeScreen() {
     
     try {
       setLoadingDonations(true);
-      const response = await fetch(`http://10.29.40.21:3000/api/donor/${user.id}/recent-donations?limit=5`);
+      const response = await fetch(`http://10.29.40.118:3000/api/donor/${user.id}/recent-donations?limit=5`);
       const data = await response.json();
       
       if (data.success) {

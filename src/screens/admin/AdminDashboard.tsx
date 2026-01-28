@@ -59,11 +59,11 @@ export default function AdminDashboard() {
       setIsLoading(true);
 
       // Fetch users
-      const usersResponse = await fetch('http://10.29.40.21:3000/api/users');
+      const usersResponse = await fetch('http://10.29.40.118:3000/api/users');
       const usersData = await usersResponse.json();
 
       // Fetch blood requests
-      const requestsResponse = await fetch('http://10.29.40.21:3000/api/blood-requests');
+      const requestsResponse = await fetch('http://10.29.40.118:3000/api/blood-requests');
       const requestsData = await requestsResponse.json();
 
       if (usersData.users && requestsData.requests) {
@@ -106,7 +106,7 @@ export default function AdminDashboard() {
   const loadActivities = async () => {
     try {
       setLoadingActivities(true);
-      const response = await fetch('http://10.29.40.21:3000/api/admin/recent-activities?limit=5');
+      const response = await fetch('http://10.29.40.118:3000/api/admin/recent-activities?limit=5');
       const data = await response.json();
 
       if (data.success && data.activities) {

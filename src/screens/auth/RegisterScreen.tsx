@@ -286,6 +286,7 @@ export default function RegisterScreen({ navigation }: Props) {
       setIsRegistering(true);
       
       // Register user (email already verified)
+      // @ts-ignore
       await register(name.trim(), email.trim(), password, role);
 
       // Show success message

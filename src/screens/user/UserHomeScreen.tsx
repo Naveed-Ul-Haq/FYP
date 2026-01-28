@@ -40,9 +40,9 @@ export default function UserHomeScreen() {
     try {
       const response = await profileAPI.getRecipientProfile(user.id);
       if (response.success && response.profile) {
-        const status = response.profile.approval_status || response.profile.approvalStatus;
-        setProfileStatus(status.toLowerCase());
-        setProfileRemarks(response.profile.admin_remarks || response.profile.adminRemarks || '');
+        const status = response.profile.approvalStatus || 'none';
+        setProfileStatus(status.toLowerCase() as any);
+        setProfileRemarks(response.profile.adminRemarks || '');
       } else {
         setProfileStatus('none');
       }

@@ -1,6 +1,5 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Ionicons } from '@expo/vector-icons';
 
 // Donor Screens
 import DonorHomeScreen from '../screens/donor/DonorHomeScreen';
@@ -31,7 +30,6 @@ const DonorNavigator: React.FC = () => {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        headerBackTitleVisible: false,
         headerLeftContainerStyle: {
           paddingLeft: 10,
         },

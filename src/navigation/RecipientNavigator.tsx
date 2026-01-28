@@ -1,7 +1,5 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
-import { TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 
 // Recipient Screens
 import UserHomeScreen from '../screens/user/UserHomeScreen';
@@ -34,7 +32,6 @@ const RecipientNavigator: React.FC = () => {
         headerTitleStyle: {
           fontWeight: 'bold',
         },
-        headerBackTitleVisible: false,
         headerLeftContainerStyle: {
           paddingLeft: 10,
         },

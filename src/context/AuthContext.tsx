@@ -25,7 +25,7 @@ interface AuthContextType {
   resetPassword: (email: string, newPassword: string) => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // AsyncStorage keys for session persistence
 const USER_DATA_KEY = '@bdms_user_data';
