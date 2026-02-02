@@ -54,35 +54,23 @@ export async function sendVerificationCode(
  * @param code - 6-digit verification code
  * @returns Promise with response
  */
+
 export async function verifyCode(
   email: string,
-  code: string
-): Promise<EmailServiceResponse> {
-  try {
-    const response = await fetch(`${API_URL}/verify-code`, {
+  code: string      
+
+): Promise<EmailServiceResponse> {    
+  try {     
+
+
+    const response = await fetch(`${API_URL}/verify-code`, {    
+
+    }
+
+
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, code }),
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Invalid verification code');
-    }
-
-    return {
-      success: true,
-      message: data.message,
-    };
-  } catch (error) {
-    console.error('❌ Verification error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Verification failed',
-    };
-  }
-}
-
