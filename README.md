@@ -143,6 +143,4 @@ This project is developed as a **Final Year Project (FYP)** and currently repres
 
 *Program:* BSSE
 
-*Institution:* *INSTITUTE OF MANAGEMENT SCIENCES*
-
-
+*Institution:* *INSTITUTE OF MANAGEMENT SCIENCES (IMS)*
