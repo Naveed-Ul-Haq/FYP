@@ -124,7 +124,7 @@ export default function DonorHomeScreen() {
     
     try {
       setLoadingDonations(true);
-      const response = await fetch(`http://10.29.40.118:3000/api/donor/${user.id}/recent-donations?limit=5`);
+  const response = await fetch(`http://10.29.64.21:3000/api/donor/${user.id}/recent-donations?limit=5`);
       const data = await response.json();
       
       if (data.success) {

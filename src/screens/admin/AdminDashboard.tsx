@@ -13,58 +13,24 @@ import DrawerContent, { DrawerMenuItem } from '../../components/layout/DrawerCon
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-export default function AdminDashboard() {
-  const navigation = useNavigation<NavigationProp>();
-  const { user, logout } = useAuth();
-  const { showAlert } = useAlert();
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    totalDonors: 0,
-    totalRecipients: 0,
-    activeRequests: 0,
-    totalRequests: 0,
-    completedRequests: 0,
-  });
-  const [isLoading, setIsLoading] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [showMenu, setShowMenu] = useState(false);
-  const [activities, setActivities] = useState<Array<{
-    title: string;
-    timeAgo: string;
-    color: string;
-  }>>([]);
-  const [loadingActivities, setLoadingActivities] = useState(true);
+const initialStats = {
 
-  useEffect(() => {
-    loadStats();
-    loadActivities();
-  }, []);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      if (user?.id) {
-        loadUnreadCount();
-      }
-    }, [user])
-  );
-
-  const loadUnreadCount = async () => {
-    if (user?.id) {
-      const count = await getUnreadNotificationCount(user.id);
-      setUnreadCount(count);
-    }
-  };
+  //Just to avoid undefined errors before data loads
+  totalUsers: 0,
+  totalDonors: 0,
+  totalRecipients: 0,
+}
 
   const loadStats = async () => {
     try {
       setIsLoading(true);
 
       // Fetch users
-      const usersResponse = await fetch('http://10.29.40.118:3000/api/users');
+  const usersResponse = await fetch('http://10.29.64.21:3000/api/users');
       const usersData = await usersResponse.json();
 
       // Fetch blood requests
-      const requestsResponse = await fetch('http://10.29.40.118:3000/api/blood-requests');
+  const requestsResponse = await fetch('http://10.29.64.21:3000/api/blood-requests');
       const requestsData = await requestsResponse.json();
 
       if (usersData.users && requestsData.requests) {
@@ -107,7 +73,7 @@ export default function AdminDashboard() {
   const loadActivities = async () => {
     try {
       setLoadingActivities(true);
-      const response = await fetch('http://10.29.40.118:3000/api/admin/recent-activities?limit=5');
+  const response = await fetch('http://10.29.64.21:3000/api/admin/recent-activities?limit=5');
       const data = await response.json();
 
       if (data.success && data.activities) {

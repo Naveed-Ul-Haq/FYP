@@ -4265,7 +4265,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Email service running on port ${PORT}`);
   console.log(`📧 Ready to send verification emails`);
   console.log(`💾 Using SQLite database: ${dbPath}`);
-  console.log(`🌐 Accessible at: http://localhost:${PORT}`);
+  console.log(`🌐 Accessible at: http://10.29.64.21:${PORT}`);
   
   // Show network IP address
   const os = require('os');

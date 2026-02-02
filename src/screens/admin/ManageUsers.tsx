@@ -51,7 +51,7 @@ const ManageUsers: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      const response = await fetch('http://10.29.40.118:3000/api/users');
+    const response = await fetch('http://10.29.64.21:3000/api/users');
       const data = await response.json();
 
       if (data.users) {
@@ -83,7 +83,7 @@ const ManageUsers: React.FC = () => {
   };
   const loadAppealsCount = async () => {
     try {
-      const response = await fetch('http://10.29.40.118:3000/api/admin/appeals');
+  const response = await fetch('http://10.29.64.21:3000/api/admin/appeals');
       const data = await response.json();
 
       if (data.success && data.appeals) {

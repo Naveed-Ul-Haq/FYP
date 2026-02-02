@@ -9,7 +9,7 @@ export const config = {
   // API Configuration
   api: {
     baseUrl: __DEV__ 
-      ? 'http://localhost:3000/api/v1' 
+      ? 'http://10.29.64.21:3000/api/v1' 
       : 'https://api.bdms.example.com/v1',
     timeout: 30000, // 30 seconds
   },
