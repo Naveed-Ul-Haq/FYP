@@ -13,13 +13,47 @@ import DrawerContent, { DrawerMenuItem } from '../../components/layout/DrawerCon
 
 type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-const initialStats = {
+export default function AdminDashboard() {
+  const navigation = useNavigation<NavigationProp>();
+  const { user, logout } = useAuth();
+  const { showAlert } = useAlert();
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalDonors: 0,
+    totalRecipients: 0,
+    activeRequests: 0,
+    totalRequests: 0,
+    completedRequests: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
+  const [activities, setActivities] = useState<Array<{
+    title: string;
+    timeAgo: string;
+    color: string;
+  }>>([]);
+  const [loadingActivities, setLoadingActivities] = useState(true);
 
-  //Just to avoid undefined errors before data loads
-  totalUsers: 0,
-  totalDonors: 0,
-  totalRecipients: 0,
-}
+  useEffect(() => {
+    loadStats();
+    loadActivities();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id) {
+        loadUnreadCount();
+      }
+    }, [user])
+  );
+
+  const loadUnreadCount = async () => {
+    if (user?.id) {
+      const count = await getUnreadNotificationCount(user.id);
+      setUnreadCount(count);
+    }
+  };
 
   const loadStats = async () => {
     try {
