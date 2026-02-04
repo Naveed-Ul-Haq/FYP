@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://10.29.64.21:3000/api';
+export const API_BASE_URL = 'http://10.29.64.15:3000/api';
 
 async function apiRequest<T>(
   endpoint: string,
