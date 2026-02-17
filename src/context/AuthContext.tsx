@@ -8,6 +8,7 @@ import { authAPI, User as APIUser } from '../services/api';
 export interface User {
   id: string;
   name: string;
+  phone?: string;
   email: string;
   role: 'admin' | 'donor' | 'user';
 }
