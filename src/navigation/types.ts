@@ -1,3 +1,10 @@
+/**
+ * Navigation Types
+ * 
+ * Defines all possible routes in the application
+ * Used by React Navigation for type-safe navigation
+ */
+
 export type RootStackParamList = {
   // Authentication Screens (No role required)
   Login: undefined;
@@ -31,7 +38,7 @@ export type RootStackParamList = {
   
   // Shared screens
   LiveTracking: { requestId: string; donorId: string };
-  RatingScreen: { requestId: string; donorId: string; donorName: string; recipientName: string };
+  RatingScreen: { requestId: string; donorId: string; donorName?: string; recipientName?: string; recipientId?: string; raterRole?: string };
 };
 
 export type DonorStackParamList = {
@@ -53,5 +60,16 @@ export type RecipientStackParamList = {
   LiveTracking: { requestId: string; donorId: string };
 };
 
+/**
+ * User Roles for RBAC
+ * 
+ * Defines all possible user roles in the system
+ * null = not authenticated
+ * 
+ * Note: Each role has specific permissions and access levels
+ * - admin: Full system access, user management, reports
+ * - donor: Donation history, eligibility status, profile
+ * - user: Search donors, create requests, view blood banks (recipients)
+ */
 export type UserRole = 'admin' | 'donor' | 'user' | null;
 

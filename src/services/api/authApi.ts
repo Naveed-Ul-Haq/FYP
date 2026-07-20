@@ -1,3 +1,16 @@
+/**
+ * Authentication API Service
+ * 
+ * Handles all authentication-related API calls
+ * 
+ * Endpoints:
+ * - POST /auth/login
+ * - POST /auth/register
+ * - POST /auth/logout
+ * - POST /auth/forgot-password
+ * - POST /auth/verify-otp
+ */
+
 import { apiClient } from './apiClient';
 
 export const authApi = {
@@ -26,6 +39,9 @@ export const authApi = {
     return apiClient.post('/auth/register', userData);
   },
 
+  /**
+   * Logout user
+   */
   logout: async () => {
     return apiClient.post('/auth/logout', {});
   },
@@ -45,15 +61,6 @@ export const authApi = {
    */
   verifyOTP: async (email: string, otp: string) => {
     return apiClient.post('/auth/verify-otp', { email, otp });
-  },
-
-  /**
-   * Get user's role by email (for intelligent login)
-   * @param email - User email
-   * @returns User role
-   */
-  getUserRole: async (email: string) => {
-    return apiClient.post('/get-user-role', { email });
   },
 };
 

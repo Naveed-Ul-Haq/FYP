@@ -1,16 +1,42 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { bloodRequestAPI, BloodRequest as APIBloodRequest } from '../services/api';
 
+/**
+ * Blood Request Lifecycle States
+ * 
+ * Flow: PENDING → ACCEPTED → COMPLETED or CANCELLED
+ * 
+ * - PENDING: Request submitted, searching for donors
+ * - ACCEPTED: One or more donors matched
+ * - COMPLETED: Blood donation fulfilled
+ * - CANCELLED: Request was cancelled by donor or recipient
+ */
 export type RequestStatus = 'PENDING' | 'ACCEPTED' | 'COMPLETED' | 'CANCELLED';
 
+/**
+ * Urgency Levels for Blood Requests
+ * 
+ * - NORMAL: Standard request (24-48 hours)
+ * - EMERGENCY: Critical request (immediate response needed)
+ */
 export type UrgencyLevel = 'NORMAL' | 'EMERGENCY';
 
+/**
+ * Donor Information
+ * 
+ * Represents a donor who has accepted a request
+ */
 export interface AcceptedDonor {
   donorId: string;
   donorName: string;
   acceptedAt: Date;
 }
 
+/**
+ * Blood Request Data Model
+ * 
+ * Represents a single blood request from a recipient
+ */
 export interface BloodRequest {
   id: string;
   recipientId: string;
@@ -27,8 +53,17 @@ export interface BloodRequest {
   updatedAt: Date;
   acceptedBy?: AcceptedDonor[];
   declinedBy?: string[];
+  shareLocation?: boolean;
+  recipientLatitude?: number;
+  recipientLongitude?: number;
 }
 
+/**
+ * Blood Request Context Interface
+ * 
+ * Provides methods for managing blood requests throughout the app
+ * NOW USES BACKEND SQLite DATABASE - All data synced across devices
+ */
 interface BloodRequestContextType {
   requests: BloodRequest[];
   activeRequest: BloodRequest | null;
@@ -45,12 +80,24 @@ interface BloodRequestContextType {
 
 const BloodRequestContext = createContext<BloodRequestContextType | undefined>(undefined);
 
+/**
+ * Blood Request Provider
+ * 
+ * Manages blood request state with backend SQLite database
+ * - All data stored on server
+ * - Synced across web and mobile
+ * - Real-time updates from backend
+ */
 export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [requests, setRequests] = useState<BloodRequest[]>([]);
   const [activeRequest, setActiveRequest] = useState<BloodRequest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRequestCount, setLastRequestCount] = useState(0); // Track changes
 
+  /**
+   * Load requests from backend on mount and poll every 1 second
+   * Fast polling for real-time updates
+   */
   useEffect(() => {
     // Initial load with retry on failure
     loadRequests();
@@ -63,6 +110,9 @@ export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return () => clearInterval(interval);
   }, []);
 
+  /**
+   * Convert API response to local BloodRequest format
+   */
   const convertAPIRequest = (apiRequest: any): BloodRequest => {
     // Handle both snake_case (from backend) and camelCase (from frontend)
     return {
@@ -88,6 +138,9 @@ export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
   };
 
+  /**
+   * Load all blood requests from backend
+   */
   const loadRequests = async () => {
     try {
       const response = await bloodRequestAPI.getAll();
@@ -116,6 +169,9 @@ export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  /**
+   * Refresh requests manually
+   */
   const refreshRequests = async (): Promise<void> => {
     await loadRequests();
   };
@@ -149,11 +205,8 @@ export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ 
         urgencyLevel: request.urgencyLevel,
         location: request.location,
         notes: request.notes,
-// @ts-ignore - Properties exist on full request object from API
         shareLocation: request.shareLocation,
-        // @ts-ignore
         recipientLatitude: request.recipientLatitude,
-        // @ts-ignore
         recipientLongitude: request.recipientLongitude,
       });
 
@@ -202,16 +255,34 @@ export const BloodRequestProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
+  /**
+   * Get a specific request by ID
+   */
   const getRequestById = (requestId: string): BloodRequest | undefined => {
     return requests.find(req => req.id === requestId);
   };
 
+  /**
+   * Get all requests for a specific user
+   */
   const getUserRequests = (userId: string): BloodRequest[] => {
     return requests
       .filter(req => req.recipientId === userId)
       .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   };
 
+  /**
+   * Get all available requests for donors
+   * 
+   * Returns requests that are not completed or cancelled and can be accepted by donors
+   * Sorted by urgency (Emergency first) then by creation date
+   * 
+   * Note: This simulates the donor matching algorithm
+   * In production, this would filter by:
+   * - Blood group compatibility
+   * - Geographic proximity
+   * - Donor eligibility status
+   */
   const getAvailableRequests = (): BloodRequest[] => {
     return requests
       .filter(req => req.status !== 'COMPLETED' && req.status !== 'CANCELLED')

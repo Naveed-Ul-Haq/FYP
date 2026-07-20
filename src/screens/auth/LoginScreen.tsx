@@ -59,13 +59,11 @@ export default function LoginScreen({ navigation }: Props) {
 
     try {
       // First, get user's role from backend by email
-      const roleResponse = await authAPI.getUserRole(email.trim());
-      const role = roleResponse?.role;
-      if (!role) {
-        throw new Error('User role not found for this email');
-      }
+      const { role } = await authAPI.getUserRole(email.trim());
+
       // Now login with the detected role
       await login(email.trim(), password, role);
+      
       showAlert({
         type: 'success',
         title: 'Success',
@@ -73,6 +71,7 @@ export default function LoginScreen({ navigation }: Props) {
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      
       showAlert({
         type: 'error',
         title: 'Login Failed',
@@ -85,7 +84,8 @@ export default function LoginScreen({ navigation }: Props) {
   return (
     <KeyboardAvoidingView 
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
     >
       <ScrollView 
         contentContainerStyle={styles.scrollContent}

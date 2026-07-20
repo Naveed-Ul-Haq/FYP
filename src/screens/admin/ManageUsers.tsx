@@ -1,4 +1,3 @@
-// @ts-nocheck - Type definitions incomplete for some properties
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,6 +13,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { useAlert } from '../../context/AlertContext';
 
+/**
+ * User Interface for Admin Panel
+ * 
+ * This interface represents a user in the system with their profile status
+ * Used for admin-level user management operations
+ */
 interface AdminUser {
   id: string;
   name: string;
@@ -28,6 +33,23 @@ interface AdminUser {
   city?: string;
 }
 
+/**
+ * ManageUsers Screen
+ * 
+ * Admin screen to view and manage all registered users in the system
+ * 
+ * ADMIN RESPONSIBILITIES:
+ * - View complete list of registered donors and recipients
+ * - Filter users by role (donor/recipient/all)
+ * - Search users by name or email
+ * - View user details including approval status
+ * - Monitor user registration trends
+ * 
+ * ROLE-BASED ACCESS CONTROL (RBAC):
+ * - Only accessible to users with role = 'admin'
+ * - Enforced at navigation level
+ * - Additional server-side validation recommended for production
+ */
 const ManageUsers: React.FC = () => {
   const navigation = useNavigation();
   const { showAlert } = useAlert();
@@ -49,9 +71,15 @@ const ManageUsers: React.FC = () => {
     applyFilters();
   }, [users, searchQuery, selectedFilter]);
 
+  /**
+   * Load all registered users from backend
+   * 
+   * Note: Uses GET /api/users endpoint
+   * In production, this should be paginated for large datasets
+   */
   const loadUsers = async () => {
     try {
-    const response = await fetch('http://10.29.64.21:3000/api/users');
+      const response = await fetch('https://bdms-production-5878.up.railway.app/api/users');
       const data = await response.json();
 
       if (data.users) {
@@ -81,9 +109,13 @@ const ManageUsers: React.FC = () => {
       setIsRefreshing(false);
     }
   };
+
+  /**
+   * Load pending appeals count
+   */
   const loadAppealsCount = async () => {
     try {
-  const response = await fetch('http://10.29.64.21:3000/api/admin/appeals');
+      const response = await fetch('https://bdms-production-5878.up.railway.app/api/admin/appeals');
       const data = await response.json();
 
       if (data.success && data.appeals) {
@@ -95,6 +127,12 @@ const ManageUsers: React.FC = () => {
     }
   };
 
+  /**
+   * Apply search and filter to user list
+   * 
+   * Note: Client-side filtering for responsive UI
+   * For large datasets, implement server-side filtering
+   */
   const applyFilters = () => {
     let filtered = users;
 
@@ -116,11 +154,17 @@ const ManageUsers: React.FC = () => {
     setFilteredUsers(filtered);
   };
 
+  /**
+   * Refresh user list
+   */
   const handleRefresh = () => {
     setIsRefreshing(true);
     loadUsers();
   };
 
+  /**
+   * Format timestamp to readable date
+   */
   const formatDate = (timestamp: number): string => {
     return new Date(timestamp * 1000).toLocaleDateString('en-US', {
       year: 'numeric',
@@ -129,6 +173,9 @@ const ManageUsers: React.FC = () => {
     });
   };
 
+  /**
+   * Get role badge color
+   */
   const getRoleBadgeStyle = (role: string) => {
     return role === 'donor' 
       ? { backgroundColor: '#FFEBEE', color: '#DC143C' }

@@ -10,7 +10,6 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-// @ts-ignore - @expo/vector-icons type definitions not available
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { useNavigation } from '@react-navigation/native';
@@ -19,9 +18,13 @@ import { useAlert } from '../../context/AlertContext';
 import { RootStackParamList } from '../../navigation/types';
 import { API_BASE_URL } from '../../services/api';
 
-// @ts-ignore - RecipientProfile not in RootStackParamList type definition
 type NavigationProp = StackNavigationProp<RootStackParamList, 'RecipientProfile'>;
 
+/**
+ * RecipientProfile
+ * 
+ * Screen for recipient to manage their profile and change password
+ */
 export default function RecipientProfile() {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
@@ -37,6 +40,9 @@ export default function RecipientProfile() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+  /**
+   * Send verification code to email
+   */
   const handleSendCode = async () => {
     if (!user?.email) {
       showAlert({ title: 'Error', message: 'Email not found', type: 'error' });
@@ -87,6 +93,9 @@ export default function RecipientProfile() {
     }
   };
 
+  /**
+   * Verify code and update password
+   */
   const handleUpdatePassword = async () => {
     if (!verificationCode || verificationCode.length !== 6) {
       showAlert({ title: 'Error', message: 'Please enter the 6-digit verification code', type: 'error' });

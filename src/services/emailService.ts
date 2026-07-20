@@ -1,6 +1,15 @@
-import { API_BASE_URL } from './api';
+/**
+ * Email Service
+ * 
+ * Handles communication with backend email API
+ * Sends verification codes and verifies them
+ */
 
-const API_URL = API_BASE_URL;
+// Backend API URL
+// Updated to use your computer's IP address so mobile devices can connect
+// Your computer IP: 
+
+const API_URL = 'https://bdms-production-5878.up.railway.app/api';
 
 export interface EmailServiceResponse {
   success: boolean;
@@ -49,11 +58,11 @@ export async function sendVerificationCode(
 
 /**
  * Verify code entered by user
+ * 
  * @param email - User's email
  * @param code - 6-digit verification code
  * @returns Promise with response
  */
-
 export async function verifyCode(
   email: string,
   code: string

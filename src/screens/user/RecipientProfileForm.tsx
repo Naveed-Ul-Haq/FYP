@@ -1,512 +1,723 @@
-// @ts-nocheck - Navigation type definitions incomplete
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  ScrollView,
   TextInput,
   TouchableOpacity,
-  ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
   Platform,
+  Image,
+  Modal,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { StackNavigationProp } from '@react-navigation/stack';
+import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../../navigation/types';
 import { useAuth } from '../../context/AuthContext';
 import { useAlert } from '../../context/AlertContext';
-import { RootStackParamList } from '../../navigation/types';
-import { API_BASE_URL } from '../../services/api';
+import { profileAPI, mobileAPI } from '../../services/api';
 
-type NavigationProp = StackNavigationProp<RootStackParamList, 'RecipientProfile'>;
+type NavigationProp = StackNavigationProp<RootStackParamList>;
 
-export default function RecipientProfile() {
+/**
+ * Recipient Profile Form Screen
+ * 
+ * Comprehensive form for recipients to complete their profile
+ * Required fields for admin approval:
+ * - Profile Image
+ * - Mobile Number (verified)
+ * - Address, City, Zipcode
+ * - CNIC (Optional)
+ */
+const RecipientProfileForm: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user } = useAuth();
   const { showAlert } = useAlert();
 
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [verificationCode, setVerificationCode] = useState('');
-  const [codeSent, setCodeSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  // Profile Image
+  const [profileImage, setProfileImage] = useState<string>('');
 
-  const handleSendCode = async () => {
-    if (!user?.email) {
-      showAlert({ title: 'Error', message: 'Email not found', type: 'error' });
-      return;
-    }
+  // Personal Information
+  const [mobile, setMobile] = useState<string>('');
+  const [cnic, setCnic] = useState<string>('');
+  const [address, setAddress] = useState<string>('');
+  const [city, setCity] = useState<string>('');
+  const [zipcode, setZipcode] = useState<string>('');
 
-    if (!currentPassword) {
-      showAlert({ title: 'Error', message: 'Please enter your current password', type: 'error' });
-      return;
-    }
+  // Mobile field (verification removed as per user request)
+  const [isMobileVerified] = useState(true); // Auto-verified for simplicity
 
-    if (!newPassword || newPassword.length < 6) {
-      showAlert({ title: 'Error', message: 'New password must be at least 6 characters', type: 'error' });
-      return;
-    }
+  // Form State
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-    if (newPassword !== confirmPassword) {
-      showAlert({ title: 'Error', message: 'Passwords do not match', type: 'error' });
-      return;
-    }
+  // Existing Profile
+  const [existingProfile, setExistingProfile] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-    setLoading(true);
+  /**
+   * Load existing profile on mount
+   */
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  const loadProfile = async () => {
+    if (!user) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/send-verification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user.email,
-          purpose: 'password_change',
-        }),
-      });
-
-      const data = await response.json();
-      console.log('✅ Send verification response:', data);
-
-      if (data.success) {
-        setCodeSent(true);
-        showAlert({ title: 'Success', message: data.message || 'Verification code sent to your email', type: 'success' });
-      } else {
-        showAlert({ title: 'Error', message: data.error || 'Failed to send verification code', type: 'error' });
+      console.log('📥 Loading recipient profile for user:', user.id);
+      const response = await profileAPI.getRecipientProfile(user.id);
+      console.log('📦 Profile response:', response);
+      
+      if (response.success && response.profile) {
+        const profile = response.profile;
+        console.log('✅ Profile data received:', {
+          mobile: profile.mobile,
+          address: profile.address,
+          city: profile.city,
+          zipcode: profile.zipcode
+        });
+        
+        setExistingProfile(profile);
+        setProfileImage(profile.profile_image || profile.profileImage || '');
+        setMobile(profile.mobile || '');
+        // Mobile verification removed - no need to set isMobileVerified
+        setCnic(profile.cnic || '');
+        setAddress(profile.address || '');
+        setCity(profile.city || '');
+        setZipcode(profile.zipcode || '');
+        
+        console.log('✅ State updated with profile data');
       }
-    } catch (error) {
-      console.error('❌ Error sending verification code:', error);
-      showAlert({ title: 'Error', message: 'Failed to send verification code. Please try again.', type: 'error' });
+    } catch (error: any) {
+      console.log('❌ Error loading profile:', error);
+      console.log('No existing profile found or error occurred');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleUpdatePassword = async () => {
-    if (!verificationCode || verificationCode.length !== 6) {
-      showAlert({ title: 'Error', message: 'Please enter the 6-digit verification code', type: 'error' });
-      return;
-    }
-
-    setLoading(true);
-
+  /**
+   * Request camera/gallery permissions and pick image
+   */
+  const handleImagePicker = async () => {
     try {
-      // First, verify the code
-      const verifyResponse = await fetch(`${API_BASE_URL}/verify-code`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: user?.email,
-          code: verificationCode,
-          purpose: 'password_change',
-        }),
-      });
-
-      const verifyData = await verifyResponse.json();
-      console.log('✅ Verify code response:', verifyData);
-
-      if (!verifyData.success) {
-        showAlert({ title: 'Error', message: verifyData.error || 'Invalid verification code', type: 'error' });
-        setLoading(false);
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      
+      if (status !== 'granted') {
+        showAlert({
+          type: 'warning',
+          title: 'Permission Required',
+          message: 'Please grant permission to access your photos',
+        });
         return;
       }
 
-      // Verify current password and update to new password
-      const updateResponse = await fetch(`${API_BASE_URL}/auth/change-password`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: user?.id,
-          currentPassword,
-          newPassword,
-        }),
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.5,
+        base64: true, // Enable base64 encoding
       });
 
-      const updateData = await updateResponse.json();
-      console.log('✅ Update password response:', updateData);
-
-      if (updateData.success) {
-        showAlert({ title: 'Success', message: updateData.message || 'Password updated successfully', type: 'success' });
+      if (!result.canceled && result.assets[0]) {
+        const asset = result.assets[0];
         
-        // Reset form
-        setCurrentPassword('');
-        setNewPassword('');
-        setConfirmPassword('');
-        setVerificationCode('');
-        setCodeSent(false);
+        // ALWAYS use base64 to ensure persistence across app restarts
+        if (asset.base64) {
+          const base64Image = `data:image/jpeg;base64,${asset.base64}`;
+          setProfileImage(base64Image);
+          console.log(`✅ [Profile Image] Base64 saved: ${base64Image.length} characters`);
+        } else {
+          // This should not happen since base64: true, but just in case
+          console.error('❌ [Profile Image] Base64 not available! Using URI as fallback (will not persist)');
+          showAlert({
+            type: 'warning',
+            title: 'Image Warning',
+            message: 'Image may not persist after app restart. Please try selecting again.',
+          });
+          setProfileImage(asset.uri);
+        }
         
-        // Navigate back after a short delay
-        setTimeout(() => {
-          navigation.goBack();
-        }, 1500);
-      } else {
-        showAlert({ title: 'Error', message: updateData.error || 'Failed to update password', type: 'error' });
+        setErrors({ ...errors, profileImage: '' });
       }
-    } catch (error: any) {
-      console.error('❌ Error updating password:', error);
-      showAlert({ title: 'Error', message: error.message || 'Failed to update password. Please try again.', type: 'error' });
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      console.error('Image picker error:', error);
+      showAlert({
+        type: 'error',
+        title: 'Error',
+        message: 'Failed to select image',
+      });
     }
   };
 
+  /**
+   * Send verification code to mobile
+   */
+  // Mobile verification functions removed - simplified mobile input
+
+  /**
+   * Validate form
+   */
+  const validateForm = (): boolean => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!profileImage) newErrors.profileImage = 'Profile image is required';
+    if (!mobile) newErrors.mobile = 'Mobile number is required';
+    else if (!mobile.match(/^92\d{10}$/)) newErrors.mobile = 'Invalid format (92xxxxxxxxxx)';
+    // Mobile verification removed as per user request
+    if (!address.trim()) newErrors.address = 'Address is required';
+    if (!city.trim()) newErrors.city = 'City is required';
+    if (!zipcode.trim()) newErrors.zipcode = 'Zipcode is required';
+    if (cnic && !cnic.match(/^\d{13}$/)) {
+      newErrors.cnic = 'CNIC must be 13 digits (without dashes)';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  /**
+   * Submit profile
+   */
+  const handleSubmit = async () => {
+    if (!validateForm() || !user) return;
+
+    try {
+      setIsSubmitting(true);
+
+      const profileData = {
+        userId: user.id,
+        profileImage,
+        mobile,
+        mobileVerified: true,
+        cnic: cnic.trim() || undefined,
+        address: address.trim(),
+        city: city.trim(),
+        zipcode: zipcode.trim(),
+      };
+
+      const response = await profileAPI.saveRecipientProfile(profileData);
+
+      if (response.success) {
+        showAlert({
+          type: 'success',
+          title: 'Profile Submitted',
+          message: 'Your profile has been submitted for admin approval. You will be notified once approved.',
+        });
+        navigation.goBack();
+      }
+    } catch (error: any) {
+      showAlert({
+        type: 'error',
+        title: 'Submission Failed',
+        message: error.message || 'Failed to save profile. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#DC143C" />
+        <Text style={styles.loadingText}>Loading profile...</Text>
+      </View>
+    );
+  }
+
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
+    <KeyboardAvoidingView 
+      style={styles.container} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Ionicons name="arrow-back" size={24} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile Settings</Text>
-        <View style={{ width: 40 }} />
-      </View>
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.contentContainer}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Ionicons name="person-circle" size={48} color="#DC143C" />
+          <Text style={styles.headerTitle}>Complete Your Profile</Text>
+          <Text style={styles.headerSubtitle}>
+            Fill in all required details for admin approval
+          </Text>
+          {existingProfile?.approval_status === 'REJECTED' && (
+            <View style={styles.rejectionCard}>
+              <Ionicons name="alert-circle" size={20} color="#F44336" />
+              <Text style={styles.rejectionText}>
+                Profile Rejected: {existingProfile.admin_remarks || 'Please update your information'}
+              </Text>
+            </View>
+          )}
+        </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
-        {/* User Info Card */}
-        <View style={styles.infoCard}>
-          <View style={styles.avatarContainer}>
-            <Ionicons name="person-circle" size={80} color="#DC143C" />
+        {/* Full Name (Read-Only) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Full Name</Text>
+          <View style={[styles.input, styles.inputReadOnly]}>
+            <Text style={styles.inputReadOnlyText}>{user?.name || 'N/A'}</Text>
           </View>
-          <Text style={styles.userName}>{user?.name}</Text>
-          <Text style={styles.userEmail}>{user?.email}</Text>
-          <View style={styles.roleBadge}>
-            <Text style={styles.roleBadgeText}>RECIPIENT</Text>
+          <Text style={styles.helperText}>From your account</Text>
+        </View>
+
+        {/* Email (Read-Only) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Email Address</Text>
+          <View style={[styles.input, styles.inputReadOnly]}>
+            <Ionicons name="mail" size={16} color="#999" style={{ marginRight: 8 }} />
+            <Text style={styles.inputReadOnlyText}>{user?.email || 'N/A'}</Text>
+          </View>
+          <Text style={styles.helperText}>Email cannot be changed</Text>
+        </View>
+
+        {/* Profile Image */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            Profile Photo <Text style={styles.required}>*</Text>
+          </Text>
+          <TouchableOpacity 
+            style={styles.imagePickerButton} 
+            onPress={handleImagePicker}
+            activeOpacity={0.7}
+          >
+            {profileImage && profileImage.trim() !== '' ? (
+              <Image source={{ uri: profileImage }} style={styles.profileImage} />
+            ) : (
+              <View style={styles.imagePlaceholder}>
+                <Ionicons name="camera" size={40} color="#999" />
+                <Text style={styles.imagePlaceholderText}>Tap to upload photo</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+          {errors.profileImage && (
+            <Text style={styles.errorText}>{errors.profileImage}</Text>
+          )}
+        </View>
+
+        {/* Mobile Number */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            Mobile Number <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, errors.mobile && styles.inputError]}
+            placeholder="92xxxxxxxxxx (Pakistan)"
+            value={mobile}
+            onChangeText={(text) => {
+              setMobile(text);
+              setErrors({ ...errors, mobile: '' });
+            }}
+            keyboardType="phone-pad"
+            maxLength={12}
+          />
+          {errors.mobile && <Text style={styles.errorText}>{errors.mobile}</Text>}
+          <Text style={styles.helperText}>
+            Format: 92xxxxxxxxxx (e.g., 923001234567)
+          </Text>
+        </View>
+
+        {/* CNIC (Optional) */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>CNIC (Optional)</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="13 digits without dashes"
+            value={cnic}
+            onChangeText={(text) => {
+              setCnic(text.replace(/[^0-9]/g, ''));
+              setErrors({ ...errors, cnic: '' });
+            }}
+            keyboardType="numeric"
+            maxLength={13}
+          />
+          {errors.cnic && <Text style={styles.errorText}>{errors.cnic}</Text>}
+          <Text style={styles.helperText}>
+            Example: 3520212345678
+          </Text>
+        </View>
+
+        {/* Complete Address */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>
+            Complete Address <Text style={styles.required}>*</Text>
+          </Text>
+          <TextInput
+            style={[styles.input, styles.textArea]}
+            placeholder="House #, Street, Area"
+            value={address}
+            onChangeText={(text) => {
+              setAddress(text);
+              setErrors({ ...errors, address: '' });
+            }}
+            multiline
+            numberOfLines={3}
+          />
+          {errors.address && <Text style={styles.errorText}>{errors.address}</Text>}
+        </View>
+
+        {/* City & Zipcode */}
+        <View style={styles.row}>
+          <View style={[styles.section, styles.halfWidth]}>
+            <Text style={styles.sectionTitle}>
+              City <Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="e.g., Lahore"
+              value={city}
+              onChangeText={(text) => {
+                setCity(text);
+                setErrors({ ...errors, city: '' });
+              }}
+            />
+            {errors.city && <Text style={styles.errorText}>{errors.city}</Text>}
+          </View>
+
+          <View style={[styles.section, styles.halfWidth]}>
+            <Text style={styles.sectionTitle}>
+              Zipcode <Text style={styles.required}>*</Text>
+            </Text>
+            <TextInput
+              style={styles.input}
+              placeholder="54000"
+              value={zipcode}
+              onChangeText={(text) => {
+                setZipcode(text);
+                setErrors({ ...errors, zipcode: '' });
+              }}
+              keyboardType="numeric"
+              maxLength={6}
+            />
+            {errors.zipcode && <Text style={styles.errorText}>{errors.zipcode}</Text>}
           </View>
         </View>
 
-        {/* Change Password Section */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Ionicons name="lock-closed" size={24} color="#DC143C" />
-            <Text style={styles.sectionTitle}>Change Password</Text>
-          </View>
-
-          {/* Current Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Current Password</Text>
-            <View style={styles.passwordInputContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={currentPassword}
-                onChangeText={setCurrentPassword}
-                placeholder="Enter current password"
-                placeholderTextColor="#999"
-                secureTextEntry={!showCurrentPassword}
-                editable={!codeSent}
-              />
-              <TouchableOpacity
-                onPress={() => setShowCurrentPassword(!showCurrentPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={showCurrentPassword ? 'eye-off' : 'eye'}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* New Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>New Password</Text>
-            <View style={styles.passwordInputContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={newPassword}
-                onChangeText={setNewPassword}
-                placeholder="Enter new password (min 6 characters)"
-                placeholderTextColor="#999"
-                secureTextEntry={!showNewPassword}
-                editable={!codeSent}
-              />
-              <TouchableOpacity
-                onPress={() => setShowNewPassword(!showNewPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={showNewPassword ? 'eye-off' : 'eye'}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Confirm Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Confirm New Password</Text>
-            <View style={styles.passwordInputContainer}>
-              <TextInput
-                style={styles.passwordInput}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Re-enter new password"
-                placeholderTextColor="#999"
-                secureTextEntry={!showConfirmPassword}
-                editable={!codeSent}
-              />
-              <TouchableOpacity
-                onPress={() => setShowConfirmPassword(!showConfirmPassword)}
-                style={styles.eyeIcon}
-              >
-                <Ionicons
-                  name={showConfirmPassword ? 'eye-off' : 'eye'}
-                  size={20}
-                  color="#666"
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Send Verification Code Button */}
-          {!codeSent && (
-            <TouchableOpacity
-              style={[styles.button, styles.primaryButton]}
-              onPress={handleSendCode}
-              disabled={loading}
-            >
-              {loading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <>
-                  <Ionicons name="mail" size={20} color="#fff" />
-                  <Text style={styles.buttonText}>Send Verification Code</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
-
-          {/* Verification Code Input */}
-          {codeSent && (
+        {/* Submit Button */}
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.submitButtonDisabled]}
+          onPress={handleSubmit}
+          disabled={isSubmitting}
+          activeOpacity={0.8}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
             <>
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Verification Code</Text>
-                <TextInput
-                  style={styles.input}
-                  value={verificationCode}
-                  onChangeText={setVerificationCode}
-                  placeholder="Enter 6-digit code"
-                  placeholderTextColor="#999"
-                  keyboardType="number-pad"
-                  maxLength={6}
-                />
-                <Text style={styles.helperText}>
-                  Check your email for the verification code
-                </Text>
-              </View>
-
-              {/* Update Password Button */}
-              <TouchableOpacity
-                style={[styles.button, styles.successButton]}
-                onPress={handleUpdatePassword}
-                disabled={loading}
-              >
-                {loading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <>
-                    <Ionicons name="checkmark-circle" size={20} color="#fff" />
-                    <Text style={styles.buttonText}>Update Password</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {/* Resend Code */}
-              <TouchableOpacity
-                style={styles.linkButton}
-                onPress={() => {
-                  setCodeSent(false);
-                  setVerificationCode('');
-                  handleSendCode();
-                }}
-                disabled={loading}
-              >
-                <Text style={styles.linkButtonText}>Resend Code</Text>
-              </TouchableOpacity>
+              <Ionicons name="checkmark-circle" size={20} color="#fff" />
+              <Text style={styles.submitButtonText}>
+                {existingProfile ? 'Update Profile' : 'Submit for Approval'}
+              </Text>
             </>
           )}
+        </TouchableOpacity>
+
+        {/* Info Card */}
+        <View style={styles.infoCard}>
+          <Ionicons name="information-circle" size={20} color="#DC143C" />
+          <Text style={styles.infoText}>
+            Your profile will be reviewed by admin. Once approved, you can create blood requests.
+          </Text>
         </View>
       </ScrollView>
+
     </KeyboardAvoidingView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#f8f9fa',
   },
-  header: {
-    backgroundColor: '#DC143C',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 50,
-    paddingBottom: 16,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
+  loadingContainer: {
+    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    backgroundColor: '#f8f9fa',
   },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#fff',
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: '#666',
   },
-  content: {
+  scrollView: {
     flex: 1,
   },
   contentContainer: {
     padding: 20,
+    paddingBottom: 40,
   },
-  infoCard: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 24,
+  header: {
     alignItems: 'center',
     marginBottom: 24,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
   },
-  avatarContainer: {
-    marginBottom: 16,
-  },
-  userName: {
+  headerTitle: {
     fontSize: 24,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginBottom: 4,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginTop: 12,
   },
-  userEmail: {
+  headerSubtitle: {
     fontSize: 14,
     color: '#666',
-    marginBottom: 12,
+    textAlign: 'center',
+    marginTop: 4,
   },
-  roleBadge: {
-    backgroundColor: '#E3F2FD',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#2196F3',
+  rejectionCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFEBEE',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 16,
+    gap: 8,
   },
-  roleBadgeText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#2196F3',
-    letterSpacing: 1,
+  rejectionText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#F44336',
+    fontWeight: '500',
   },
   section: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     marginBottom: 20,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E0E0E0',
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#1A1A1A',
-    marginLeft: 12,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '600',
-    color: '#333',
+    color: '#1a1a1a',
     marginBottom: 8,
   },
+  required: {
+    color: '#F44336',
+  },
   input: {
-    backgroundColor: '#F8F9FA',
+    backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: '#e0e0e0',
     borderRadius: 12,
     padding: 14,
-    fontSize: 15,
-    color: '#1A1A1A',
+    fontSize: 16,
+    color: '#1a1a1a',
   },
-  passwordInputContainer: {
+  inputReadOnly: {
+    backgroundColor: '#f5f5f5',
+    borderColor: '#d0d0d0',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#F8F9FA',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 12,
   },
-  passwordInput: {
+  inputReadOnlyText: {
+    fontSize: 16,
+    color: '#666',
+  },
+  textArea: {
+    height: 80,
+    textAlignVertical: 'top',
+  },
+  row: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfWidth: {
     flex: 1,
-    padding: 14,
-    fontSize: 15,
-    color: '#1A1A1A',
   },
-  eyeIcon: {
-    padding: 14,
+  imagePickerButton: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+    overflow: 'hidden',
+    alignSelf: 'center',
+    borderWidth: 2,
+    borderColor: '#DC143C',
+    borderStyle: 'dashed',
+  },
+  profileImage: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePlaceholder: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  imagePlaceholderText: {
+    fontSize: 12,
+    color: '#999',
+    marginTop: 8,
+  },
+  mobileContainer: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  mobileInput: {
+    flex: 1,
+  },
+  verifyButton: {
+    backgroundColor: '#DC143C',
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  verifyButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  verifiedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 12,
+  },
+  verifiedText: {
+    color: '#4CAF50',
+    fontSize: 14,
+    fontWeight: '600',
   },
   helperText: {
     fontSize: 12,
     color: '#666',
-    marginTop: 6,
+    marginTop: 4,
     fontStyle: 'italic',
   },
-  button: {
+  errorText: {
+    fontSize: 12,
+    color: '#F44336',
+    marginTop: 4,
+  },
+  submitButton: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 14,
-    borderRadius: 12,
-    marginTop: 8,
-  },
-  primaryButton: {
     backgroundColor: '#DC143C',
-  },
-  successButton: {
-    backgroundColor: '#4CAF50',
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#fff',
-    marginLeft: 8,
-  },
-  linkButton: {
+    borderRadius: 16,
+    padding: 16,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: 12,
+    gap: 8,
     marginTop: 8,
+    ...Platform.select({
+      ios: {
+        shadowColor: '#DC143C',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
+      },
+      android: {
+        elevation: 4,
+      },
+    }),
   },
-  linkButtonText: {
-    fontSize: 14,
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+  submitButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
-    color: '#DC143C',
+  },
+  infoCard: {
+    flexDirection: 'row',
+    backgroundColor: '#FFF3E0',
+    padding: 16,
+    borderRadius: 12,
+    marginTop: 16,
+    gap: 12,
+  },
+  infoText: {
+    flex: 1,
+    fontSize: 13,
+    color: '#666',
+    lineHeight: 18,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  devCodeBox: {
+    backgroundColor: '#E3F2FD',
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    alignItems: 'center',
+  },
+  devCodeLabel: {
+    fontSize: 12,
+    color: '#666',
+    marginBottom: 4,
+  },
+  devCodeText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#2196F3',
+    letterSpacing: 4,
+  },
+  codeInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 24,
+    textAlign: 'center',
+    letterSpacing: 8,
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  modalButtonSecondary: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  modalButtonSecondaryText: {
+    color: '#666',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  modalButtonPrimary: {
+    flex: 1,
+    backgroundColor: '#DC143C',
+    borderRadius: 12,
+    padding: 14,
+    alignItems: 'center',
+  },
+  modalButtonPrimaryText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
+
+export default RecipientProfileForm;
 

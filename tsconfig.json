@@ -4,23 +4,23 @@
     "strict": true,
     "jsx": "react-native",
     "esModuleInterop": true,
-    "skipLibCheck": false,
+    "skipLibCheck": true,
     "resolveJsonModule": true,
     "moduleResolution": "bundler",
     "baseUrl": ".",
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"],
+      "src/*": ["src/*"]
     }
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "src/**/*.ts",
+    "src/**/*.tsx"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "dist"
   ]
 }

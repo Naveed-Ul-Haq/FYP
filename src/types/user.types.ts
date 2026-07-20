@@ -1,3 +1,9 @@
+/**
+ * User Type Definitions
+ * 
+ * TypeScript interfaces for user-related data
+ */
+
 export type UserRole = 'donor' | 'user' | null;
 
 export type BloodType = 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-';

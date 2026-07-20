@@ -9,8 +9,8 @@ export const config = {
   // API Configuration
   api: {
     baseUrl: __DEV__ 
-      ? 'http://10.29.64.21:3000/api/v1' 
-      : 'https://api.bdms.example.com/v1',
+      ? 'http://localhost:3000/api/v1' 
+      : 'https://bdms-production-5878.up.railway.app/api',
     timeout: 30000, // 30 seconds
   },
   

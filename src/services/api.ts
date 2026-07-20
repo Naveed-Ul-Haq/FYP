@@ -1,5 +1,23 @@
-export const API_BASE_URL = 'http://10.29.64.15:3000/api';
+/**
+ * API Service
+ * 
+ * Centralized API communication with backend SQLite database
+ * All data is now stored on the server and synced across devices
+ * 
+ * IMPORTANT: Update API_BASE_URL to match your backend server:
+ * - Local: http://localhost:3000/api
+ * - LAN Web: http://192.168.1.13:3000/api
+ * - LAN Android: http://192.168.1.13:3000/api
+ * - Android Emulator: http://10.0.2.2:3000/api (special IP for emulator)
+ */
 
+// API Base URL - Update this to match your backend IP
+// Current IP: 192.168.1.26 (verified: Dec 26, 2025)
+export const API_BASE_URL = 'https://bdms-production-5878.up.railway.app/api';
+
+/**
+ * Generic API request handler with improved error handling
+ */
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
@@ -19,8 +37,9 @@ async function apiRequest<T>(
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
-    }
+  console.log('❌ SERVER ERROR:', data);
+  throw new Error(data.error || `HTTP error! status: ${response.status}`);
+}
 
     return data;
   } catch (error: any) {
@@ -33,12 +52,18 @@ async function apiRequest<T>(
     throw error;
   }
 }
+
+// ============================================
+// AUTHENTICATION API
+// ============================================
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: string;
 }
+
 export interface RegisterData {
   id: string;
   name: string;
@@ -54,7 +79,9 @@ export interface LoginData {
 }
 
 export const authAPI = {
-
+  /**
+   * Register a new user
+   */
   register: async (data: RegisterData): Promise<{ success: boolean; user: User }> => {
     return apiRequest('/register', {
       method: 'POST',
@@ -62,6 +89,9 @@ export const authAPI = {
     });
   },
 
+  /**
+   * Login user
+   */
   login: async (data: LoginData): Promise<{ success: boolean; user: User }> => {
     return apiRequest('/login', {
       method: 'POST',
@@ -69,12 +99,19 @@ export const authAPI = {
     });
   },
 
+  /**
+   * Get user's role by email (for intelligent login)
+   */
   getUserRole: async (email: string): Promise<{ role: string }> => {
     return apiRequest('/get-user-role', {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   },
+
+  /**
+   * Reset password
+   */
   resetPassword: async (email: string, newPassword: string): Promise<{ success: boolean }> => {
     return apiRequest('/reset-password', {
       method: 'POST',
@@ -82,12 +119,20 @@ export const authAPI = {
     });
   },
 
+  /**
+   * Get all users (for debugging)
+   */
   getUsers: async (): Promise<{ users: User[] }> => {
     return apiRequest('/users', {
       method: 'GET',
     });
   },
 };
+
+// ============================================
+// BLOOD REQUEST API
+// ============================================
+
 export interface BloodRequest {
   id: string;
   recipientId: string;
@@ -129,7 +174,9 @@ export interface CreateRequestData {
 }
 
 export const bloodRequestAPI = {
- 
+  /**
+   * Create a new blood request
+   */
   create: async (data: CreateRequestData): Promise<{ success: boolean; requestId: string; request: BloodRequest }> => {
     return apiRequest('/blood-requests', {
       method: 'POST',
@@ -137,18 +184,27 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Get all blood requests
+   */
   getAll: async (): Promise<{ requests: BloodRequest[] }> => {
     return apiRequest('/blood-requests', {
       method: 'GET',
     });
   },
 
+  /**
+   * Get a specific blood request by ID
+   */
   getById: async (id: string): Promise<{ request: BloodRequest }> => {
     return apiRequest(`/blood-requests/${id}`, {
       method: 'GET',
     });
   },
 
+  /**
+   * Update request status
+   */
   updateStatus: async (id: string, status: string): Promise<{ success: boolean }> => {
     return apiRequest(`/blood-requests/${id}/status`, {
       method: 'PATCH',
@@ -156,6 +212,9 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Donor accepts a request
+   */
   accept: async (requestId: string, donorId: string, donorName: string, currentLocation?: string): Promise<{ success: boolean }> => {
     return apiRequest(`/blood-requests/${requestId}/accept`, {
       method: 'POST',
@@ -163,6 +222,9 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Donor declines a request
+   */
   decline: async (requestId: string, donorId: string): Promise<{ success: boolean }> => {
     return apiRequest(`/blood-requests/${requestId}/decline`, {
       method: 'POST',
@@ -170,11 +232,15 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Get available requests for a donor (with eligibility checks)
+   */
   getAvailableForDonor: async (donorId: string): Promise<{ requests: BloodRequest[]; message?: string }> => {
     const response = await apiRequest<{ requests: any[]; message?: string }>(`/blood-requests/available/${donorId}`, {
       method: 'GET',
     });
     
+    // Convert snake_case to camelCase and timestamps to Date objects
     const requests = (response.requests || []).map(req => ({
       id: req.id,
       recipientId: req.recipient_id || req.recipientId,
@@ -198,18 +264,23 @@ export const bloodRequestAPI = {
     }));
     
     return {
-      // @ts-ignore - Type mismatch handled at runtime
       requests,
       message: response.message,
     };
   },
 
+  /**
+   * Get donor statistics (accepted and declined counts)
+   */
   getDonorStats: async (donorId: string): Promise<{ donatedCount: number }> => {
     return apiRequest(`/donor-stats/${donorId}`, {
       method: 'GET',
     });
   },
 
+  /**
+   * Get all accepted donations for a donor with full details
+   */
   getDonorAcceptedDonations: async (donorId: string): Promise<{ donations: any[] }> => {
     const response = await apiRequest<{ donations: any[] }>(`/donor-accepted/${donorId}`, {
       method: 'GET',
@@ -252,11 +323,15 @@ export const bloodRequestAPI = {
     return { donations };
   },
 
+  /**
+   * Get list of accepted donors for a request
+   */
   getAcceptedDonors: async (requestId: string): Promise<{ success: boolean; donors: any[] }> => {
     const response = await apiRequest<{ success: boolean; donors: any[] }>(`/blood-requests/${requestId}/accepted-donors`, {
       method: 'GET',
     });
     
+    // Convert snake_case to camelCase
     const donors = (response.donors || []).map(d => ({
       donorId: d.donor_id || d.donorId,
       donorName: d.donor_name || d.donorName,
@@ -283,6 +358,9 @@ export const bloodRequestAPI = {
     return { success: response.success, donors };
   },
 
+  /**
+   * Mark donation as completed
+   */
   markCompleted: async (requestId: string, userId: string, role: 'donor' | 'recipient', donorId?: string): Promise<{ success: boolean; status: string; bothCompleted: boolean }> => {
     return apiRequest(`/blood-requests/${requestId}/complete`, {
       method: 'POST',
@@ -290,6 +368,9 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Cancel a blood request
+   */
   cancelRequest: async (requestId: string, userId: string, role: 'donor' | 'recipient', reason?: string, donorId?: string): Promise<{ success: boolean; message: string }> => {
     return apiRequest(`/blood-requests/${requestId}/cancel`, {
       method: 'POST',
@@ -297,6 +378,9 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Complete a blood request (alias for markCompleted)
+   */
   complete: async (requestId: string, data: { userId: string; userRole: 'donor' | 'recipient' | 'user'; donorId?: string }): Promise<{ success: boolean; status: string; bothCompleted: boolean }> => {
     return apiRequest(`/blood-requests/${requestId}/complete`, {
       method: 'POST',
@@ -308,6 +392,9 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Cancel a blood request (alias for cancelRequest)
+   */
   cancel: async (requestId: string, data: { userId: string; userRole: 'donor' | 'recipient' | 'user'; reason: string; donorId?: string }): Promise<{ success: boolean; message: string }> => {
     return apiRequest(`/blood-requests/${requestId}/cancel`, {
       method: 'POST',
@@ -320,14 +407,17 @@ export const bloodRequestAPI = {
     });
   },
 
+  /**
+   * Get single request by ID (direct from backend, bypasses context cache)
+   */
   getRequestByIdDirect: async (requestId: string) => {
     const response = await apiRequest(`/blood-requests/${requestId}`, {
       method: 'GET',
     });
     
-    if ((response as any).request) {
+    if (response.request) {
       // Convert snake_case to camelCase and handle timestamps
-      const req = (response as any).request;
+      const req = response.request;
       return {
         id: req.id,
         recipientId: req.recipient_id,
@@ -363,8 +453,14 @@ export const bloodRequestAPI = {
   },
 };
 
-export const respectAPI = {
+// ============================================
+// RESPECT RATINGS API
+// ============================================
 
+export const respectAPI = {
+  /**
+   * Submit a respect rating
+   */
   submitRating: async (data: {
     requestId: string;
     donorId: string;
@@ -379,6 +475,9 @@ export const respectAPI = {
     });
   },
 
+  /**
+   * Check if user has already rated or skipped
+   */
   checkRatingStatus: async (
     requestId: string, 
     donorId: string, 
@@ -395,6 +494,9 @@ export const respectAPI = {
     });
   },
 
+  /**
+   * Skip rating
+   */
   skipRating: async (data: {
     requestId: string;
     donorId: string;
@@ -407,6 +509,9 @@ export const respectAPI = {
     });
   },
 
+  /**
+   * Get average respect rating for a user
+   */
   getUserRating: async (userId: string): Promise<{ success: boolean; averageRating: number; totalRatings: number }> => {
     return apiRequest(`/respect-ratings/${userId}`, {
       method: 'GET',
@@ -414,8 +519,14 @@ export const respectAPI = {
   },
 };
 
-export const mobileAPI = {
+// ============================================
+// MOBILE VERIFICATION API
+// ============================================
 
+export const mobileAPI = {
+  /**
+   * Send verification code to mobile
+   */
   sendCode: async (mobile: string): Promise<{ success: boolean; devCode?: string }> => {
     return apiRequest('/send-mobile-verification', {
       method: 'POST',
@@ -423,6 +534,9 @@ export const mobileAPI = {
     });
   },
 
+  /**
+   * Verify mobile code
+   */
   verifyCode: async (mobile: string, code: string): Promise<{ success: boolean }> => {
     return apiRequest('/verify-mobile-code', {
       method: 'POST',
@@ -430,6 +544,10 @@ export const mobileAPI = {
     });
   },
 };
+
+// ============================================
+// PROFILE API
+// ============================================
 
 export interface DonorProfile {
   userId: string;
@@ -466,7 +584,9 @@ export interface RecipientProfile {
 }
 
 export const profileAPI = {
-
+  /**
+   * Create/Update donor profile
+   */
   saveDonorProfile: async (profile: Omit<DonorProfile, 'approvalStatus' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; profile: any }> => {
     return apiRequest('/donor-profile', {
       method: 'POST',
@@ -474,6 +594,9 @@ export const profileAPI = {
     });
   },
 
+  /**
+   * Get donor profile
+   */
   getDonorProfile: async (userId: string): Promise<{ success: boolean; profile: DonorProfile }> => {
     // Add cache-busting timestamp to prevent stale data
     const timestamp = Date.now();
@@ -487,6 +610,9 @@ export const profileAPI = {
     });
   },
 
+  /**
+   * Create/Update recipient profile
+   */
   saveRecipientProfile: async (profile: Omit<RecipientProfile, 'approvalStatus' | 'createdAt' | 'updatedAt'>): Promise<{ success: boolean; profile: any }> => {
     return apiRequest('/recipient-profile', {
       method: 'POST',
@@ -494,6 +620,9 @@ export const profileAPI = {
     });
   },
 
+  /**
+   * Get recipient profile
+   */
   getRecipientProfile: async (userId: string): Promise<{ success: boolean; profile: RecipientProfile }> => {
     return apiRequest(`/recipient-profile/${userId}`, {
       method: 'GET',
@@ -501,21 +630,32 @@ export const profileAPI = {
   },
 };
 
+// ============================================
+// ADMIN API
+// ============================================
+
 export interface PendingProfile {
   user_id: string;
   name: string;
   email: string;
   type: 'donor' | 'recipient';
   approval_status: string;
+  // ... other profile fields
 }
 
 export const adminAPI = {
+  /**
+   * Get all pending profiles
+   */
   getPendingProfiles: async (): Promise<{ success: boolean; profiles: PendingProfile[] }> => {
     return apiRequest('/admin/pending-profiles', {
       method: 'GET',
     });
   },
 
+  /**
+   * Approve a profile
+   */
   approveProfile: async (userId: string, userType: 'donor' | 'recipient'): Promise<{ success: boolean }> => {
     return apiRequest('/admin/approve-profile', {
       method: 'POST',
@@ -523,6 +663,9 @@ export const adminAPI = {
     });
   },
 
+  /**
+   * Reject a profile with remarks
+   */
   rejectProfile: async (userId: string, userType: 'donor' | 'recipient', remarks: string): Promise<{ success: boolean }> => {
     return apiRequest('/admin/reject-profile', {
       method: 'POST',

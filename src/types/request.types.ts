@@ -1,3 +1,9 @@
+/**
+ * Blood Request Type Definitions
+ * 
+ * TypeScript interfaces for blood request data
+ */
+
 import { BloodType } from './user.types';
 
 export type RequestUrgency = 'low' | 'medium' | 'high' | 'emergency';

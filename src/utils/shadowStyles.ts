@@ -1,5 +1,23 @@
 import { Platform, ViewStyle } from 'react-native';
 
+/**
+ * Cross-Platform Shadow Utility
+ * 
+ * Creates platform-appropriate shadow styles
+ * - iOS: Uses shadowColor, shadowOffset, shadowOpacity, shadowRadius
+ * - Android: Uses elevation
+ * - Web: Uses boxShadow
+ * 
+ * Usage:
+ * const styles = StyleSheet.create({
+ *   card: {
+ *     ...shadow(2), // For elevation-based
+ *     // or
+ *     ...shadowStyle({ color: '#000', offset: { width: 0, height: 2 }, opacity: 0.1, radius: 4, elevation: 3 })
+ *   }
+ * });
+ */
+
 interface ShadowProps {
   color?: string;
   offset?: { width: number; height: number };
@@ -46,6 +64,9 @@ export const shadowStyle = (props: ShadowProps): ViewStyle => {
   };
 };
 
+/**
+ * Predefined shadow presets based on Material Design elevation
+ */
 export const shadow = {
   // Elevation 1: Small shadow for subtle depth
   sm: shadowStyle({
@@ -102,6 +123,9 @@ export const shadow = {
   }),
 };
 
+/**
+ * No shadow (useful for removing shadows conditionally)
+ */
 export const noShadow = {
   shadowColor: 'transparent',
   shadowOffset: { width: 0, height: 0 },

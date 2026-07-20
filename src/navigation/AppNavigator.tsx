@@ -11,6 +11,12 @@ import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
 import AdminDashboard from '../screens/admin/AdminDashboard';
 import ProfileApprovals from '../screens/admin/ProfileApprovals';
 import ManageUsers from '../screens/admin/ManageUsers';
+import ViewRequests from '../screens/admin/ViewRequests';
+import UserProfileDetail from '../screens/admin/UserProfileDetail';
+import AppealsList from '../screens/admin/AppealsList';
+import AdminAuditLogs from '../screens/admin/AdminAuditLogs';
+import AdminProfile from '../screens/admin/AdminProfile';
+import Notifications from '../screens/admin/Notifications';
 import DonorNavigator from './DonorNavigator';
 import RecipientNavigator from './RecipientNavigator';
 
@@ -156,6 +162,54 @@ export default function AppNavigator() {
                 options={{ 
                   headerShown: false,
                   title: 'Manage Users',
+                }}
+              />
+              <Stack.Screen 
+                name="UserProfileDetail" 
+                component={UserProfileDetail}
+                options={{ 
+                  headerShown: false,
+                  title: 'User Profile',
+                }}
+              />
+              <Stack.Screen 
+                name="AppealsList" 
+                component={AppealsList}
+                options={{ 
+                  headerShown: false,
+                  title: 'Appeals',
+                }}
+              />
+              <Stack.Screen 
+                name="ViewRequests" 
+                component={ViewRequests}
+                options={{ 
+                  headerShown: false,
+                  title: 'View Requests',
+                }}
+              />
+              <Stack.Screen 
+                name="AdminAuditLogs" 
+                component={AdminAuditLogs}
+                options={{ 
+                  headerShown: false,
+                  title: 'Audit Logs',
+                }}
+              />
+              <Stack.Screen 
+                name="AdminProfile" 
+                component={AdminProfile}
+                options={{ 
+                  headerShown: false,
+                  title: 'My Profile',
+                }}
+              />
+              <Stack.Screen 
+                name="Notifications" 
+                component={Notifications}
+                options={{ 
+                  headerShown: false,
+                  title: 'Notifications',
                 }}
               />
             </>
