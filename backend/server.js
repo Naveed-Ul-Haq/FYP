@@ -29,7 +29,10 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Initialize SQLite database
-const dbPath = path.join(__dirname, 'bdms.db');
+//const dbPath = path.join(__dirname, 'bdms.db');
+const dbPath = process.env.RAILWAY_VOLUME_MOUNT_PATH
+  ? path.join(process.env.RAILWAY_VOLUME_MOUNT_PATH, 'bdms.db')
+  : path.join(__dirname, 'bdms.db');
 const db = new sqlite3.Database(dbPath, (err) => {
   if (err) {
     console.error('❌ Error opening database:', err);
