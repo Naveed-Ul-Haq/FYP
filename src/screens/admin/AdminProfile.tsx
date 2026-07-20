@@ -62,7 +62,7 @@ const AdminProfile: React.FC = () => {
 
     try {
       setEmailLoading(true);
-      const response = await fetch('https://bdms-production-5878.up.railway.app/api/send-verification', {
+      const response = await fetch(''https://fyp-production-a61b.up.railway.app/api/send-verification' {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
