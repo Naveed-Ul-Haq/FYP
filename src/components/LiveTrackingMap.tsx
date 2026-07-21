@@ -38,7 +38,7 @@ interface LiveTrackingMapProps {
   onRouteUpdate?: (distance: string, duration: string) => void;
 }
 
-const API_BASE_URL = 'https://bdms-production-5878.up.railway.app/api';
+const API_BASE_URL = 'https://fyp-production-a61b.up.railway.app/api';
 
 const LiveTrackingMap: React.FC<LiveTrackingMapProps> = ({
   requestId,

@@ -1,0 +1,17 @@
+config:
+  target: "https://fyp-production-a61b.up.railway.app"
+  phases:
+    - duration: 30
+      arrivalCount: 500
+      name: "500 concurrent registrations"
+scenarios:
+  - name: "Register user"
+    flow:
+      - post:
+          url: "/api/register"
+          json:
+            id: "{{ $uuid }}"
+            name: "Test User {{ $uuid }}"
+            email: "testuser-{{ $uuid }}@example.com"
+            password: "Test1234"
+            role: "donor"
