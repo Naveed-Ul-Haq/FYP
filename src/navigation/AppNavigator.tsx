@@ -12,6 +12,7 @@ import AdminDashboard from '../screens/admin/AdminDashboard';
 import ProfileApprovals from '../screens/admin/ProfileApprovals';
 import ManageUsers from '../screens/admin/ManageUsers';
 import ViewRequests from '../screens/admin/ViewRequests';
+import DonorReports from '../screens/admin/DonorReports';
 import UserProfileDetail from '../screens/admin/UserProfileDetail';
 import AppealsList from '../screens/admin/AppealsList';
 import AdminAuditLogs from '../screens/admin/AdminAuditLogs';
@@ -188,6 +189,14 @@ export default function AppNavigator() {
                   title: 'View Requests',
                 }}
               />
+              <Stack.Screen 
+  name="DonorReports" 
+  component={DonorReports}
+  options={{ 
+    headerShown: false,
+    title: 'Donor Reports',
+  }}
+/>
               <Stack.Screen 
                 name="AdminAuditLogs" 
                 component={AdminAuditLogs}

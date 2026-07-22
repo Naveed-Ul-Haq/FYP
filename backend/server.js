@@ -1442,7 +1442,139 @@ app.get('/api/donors-by-blood-type', (req, res) => {
     res.json({ bloodTypes: bloodTypeCounts });
   });
 });
+/**
+ * GET /api/admin/donors-report
+ *
+ * Filterable donor report for the Admin Dashboard.
+ * Lets an admin generate a list of donors filtered by any combination of:
+ *   - bloodGroup     e.g. "A+" (exact match)
+ *   - minAge / maxAge  e.g. 18, 45
+ *   - city           partial, case-insensitive match
+ *   - approvalStatus PENDING | APPROVED | REJECTED
+ *   - accountStatus  active | deactivated
+ *   - search         matches against donor name or email
+ *
+ * All params are optional - calling with no query params returns every donor.
+ * Results are always ordered by name for predictable, printable reports.
+ */
+app.get('/api/admin/donors-report', (req, res) => {
+  const {
+    bloodGroup,
+    minAge,
+    maxAge,
+    city,
+    approvalStatus,
+    accountStatus,
+    search,
+  } = req.query;
 
+  const conditions = [`u.role = 'donor'`];
+  const params = [];
+
+  if (bloodGroup && bloodGroup !== 'all') {
+    conditions.push(`dp.blood_group = ?`);
+    params.push(bloodGroup);
+  }
+
+  if (minAge) {
+    conditions.push(`dp.age >= ?`);
+    params.push(parseInt(minAge, 10));
+  }
+
+  if (maxAge) {
+    conditions.push(`dp.age <= ?`);
+    params.push(parseInt(maxAge, 10));
+  }
+
+  if (city && city.trim()) {
+    conditions.push(`LOWER(dp.city) LIKE ?`);
+    params.push(`%${city.trim().toLowerCase()}%`);
+  }
+
+  if (approvalStatus && approvalStatus !== 'all') {
+    conditions.push(`dp.approval_status = ?`);
+    params.push(approvalStatus);
+  }
+
+  if (accountStatus && accountStatus !== 'all') {
+    conditions.push(`u.account_status = ?`);
+    params.push(accountStatus);
+  }
+
+  if (search && search.trim()) {
+    conditions.push(`(LOWER(u.name) LIKE ? OR LOWER(u.email) LIKE ?)`);
+    const term = `%${search.trim().toLowerCase()}%`;
+    params.push(term, term);
+  }
+
+  const whereClause = conditions.length
+    ? `WHERE ${conditions.join(' AND ')}`
+    : '';
+
+  const query = `
+    SELECT
+      u.id,
+      u.name,
+      u.email,
+      u.account_status,
+      u.created_at,
+      dp.mobile,
+      dp.address,
+      dp.city,
+      dp.zipcode,
+      dp.blood_group,
+      dp.age,
+      dp.weight,
+      dp.last_donated,
+      dp.approval_status
+    FROM donor_profiles dp
+    INNER JOIN users u ON dp.user_id = u.id
+    ${whereClause}
+    ORDER BY u.name COLLATE NOCASE ASC
+  `;
+
+  db.all(query, params, (err, donors) => {
+    if (err) {
+      console.error('❌ Error generating donors report:', err);
+      return res.status(500).json({
+        success: false,
+        error: 'Database error',
+      });
+    }
+
+    // Summary for frontend
+    const summary = {
+      total: donors.length,
+      byBloodGroup: {},
+    };
+
+    donors.forEach((donor) => {
+      const group = donor.blood_group || 'Unknown';
+      summary.byBloodGroup[group] =
+        (summary.byBloodGroup[group] || 0) + 1;
+    });
+
+    console.log(
+      `✅ [Admin] Donor report generated: ${donors.length} result(s)`,
+      req.query
+    );
+
+    res.json({
+      success: true,
+      donors,
+      summary,
+      filtersApplied: {
+        bloodGroup: bloodGroup || 'all',
+        minAge: minAge || null,
+        maxAge: maxAge || null,
+        city: city || null,
+        approvalStatus: approvalStatus || 'all',
+        accountStatus: accountStatus || 'all',
+        search: search || null,
+      },
+    });
+  });
+});
 // ============================================
 // BLOOD REQUEST ENDPOINTS
 // ============================================

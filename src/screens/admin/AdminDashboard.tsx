@@ -279,6 +279,19 @@ export default function AdminDashboard() {
             </View>
             <Ionicons name="chevron-forward" size={24} color="#D0D0D0" />
           </TouchableOpacity>
+          <TouchableOpacity 
+  style={styles.actionCard}
+  onPress={() => navigation.navigate('DonorReports' as never)}
+>
+  <View style={[styles.actionIcon, { backgroundColor: '#FFEBEE' }]}>
+    <Ionicons name="filter" size={26} color="#DC143C" />
+  </View>
+  <View style={styles.actionContent}>
+    <Text style={styles.actionTitle}>Donor Reports</Text>
+    <Text style={styles.actionDescription}>Filter donors by blood group, age, location</Text>
+  </View>
+  <Ionicons name="chevron-forward" size={24} color="#D0D0D0" />
+</TouchableOpacity>
         </View>
 
         {/* Recent Activity */}

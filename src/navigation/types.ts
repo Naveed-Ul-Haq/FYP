@@ -18,6 +18,7 @@ export type RootStackParamList = {
   UserProfileDetail: { userId: string };  // Admin view/manage user profile
   AppealsList: undefined;         // Admin view/respond to appeals
   ViewRequests: undefined;        // Admin blood requests monitoring screen
+  DonorReports: undefined;        // Admin donor filter/report screen
   AdminAuditLogs: undefined;      // Admin audit logs screen
   AdminProfile: undefined;        // Admin profile management screen
   Notifications: undefined;       // Notifications screen
